@@ -5,4 +5,4 @@ namespace nabieva
 {
   std::ostream& out_credentials(std::ostream& out);
 }
-#endif CREDENTIALS_HPP
+#endif
