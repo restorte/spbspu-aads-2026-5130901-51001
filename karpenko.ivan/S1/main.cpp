@@ -434,7 +434,7 @@ int main()
   }
 
   bool first = true;
-  for (List< std::pair< std::string, List< size_t > > >::iterator it = sequences.begin(); 
+  for (List< std::pair< std::string, List< size_t > > >::iterator it = sequences.begin();
        it != sequences.end(); ++it)
   {
     if (!first)
@@ -447,7 +447,7 @@ int main()
   std::cout << '\n';
 
   size_t max_len = 0;
-  for (List< std::pair< std::string, List< size_t > > >::const_iterator it = sequences.cbegin(); 
+  for (List< std::pair< std::string, List< size_t > > >::const_iterator it = sequences.cbegin();
        it != sequences.cend(); ++it)
   {
     size_t len = it->second.size();
@@ -463,13 +463,13 @@ int main()
   for (size_t pos = 0; pos < max_len; ++pos)
   {
     List< size_t > new_seq;
-    
-    for (List< std::pair< std::string, List< size_t > > >::const_iterator seq_it = sequences.cbegin(); 
+
+    for (List< std::pair< std::string, List< size_t > > >::const_iterator seq_it = sequences.cbegin();
          seq_it != sequences.cend(); ++seq_it)
     {
       List< size_t >::const_iterator num_it = seq_it->second.begin();
       size_t curr = 0;
-      
+
       while (curr < pos && num_it != seq_it->second.end())
       {
         ++curr;
@@ -495,11 +495,11 @@ int main()
     return 0;
   }
 
-  for (List< List< size_t > >::iterator tit = transposed.begin(); 
+  for (List< List< size_t > >::iterator tit = transposed.begin();
        tit != transposed.end(); ++tit)
   {
     bool first_in_row = true;
-    for (List< size_t >::const_iterator nit = tit->begin(); 
+    for (List< size_t >::const_iterator nit = tit->begin();
          nit != tit->end(); ++nit)
     {
       if (!first_in_row)
@@ -513,15 +513,15 @@ int main()
   }
 
   List< size_t > sums;
-  
-  for (List< List< size_t > >::const_iterator tit = transposed.cbegin(); 
+
+  for (List< List< size_t > >::const_iterator tit = transposed.cbegin();
        tit != transposed.cend(); ++tit)
   {
     size_t sum = 0;
-    
+
     try
     {
-      for (List< size_t >::const_iterator nit = tit->begin(); 
+      for (List< size_t >::const_iterator nit = tit->begin();
            nit != tit->end(); ++nit)
       {
         if (sum > MAX - *nit)
@@ -541,7 +541,7 @@ int main()
   }
 
   first = true;
-  for (List< size_t >::const_iterator sit = sums.cbegin(); 
+  for (List< size_t >::const_iterator sit = sums.cbegin();
        sit != sums.cend(); ++sit)
   {
     if (!first)
