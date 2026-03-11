@@ -446,7 +446,7 @@ int main()
     }
   }
 
-  List< long long > sums;
+  List< unsigned long long > sums;
   bool overflow = false;
 
   for (size_t pos = 0; pos < max_len; ++pos)
@@ -471,15 +471,12 @@ int main()
         }
         std::cout << *num_it;
 
-        if (sum > std::numeric_limits< unsigned long long >::max() - static_cast< unsigned long long >(*num_it))
+        unsigned long long value = static_cast< unsigned long long >(*num_it);
+        if (sum > std::numeric_limits< unsigned long long >::max() - value)
         {
           overflow = true;
         }
-        else
-        {
-          sum += static_cast< unsigned long long >(*num_it);
-        }
-
+        sum += value;
         has_element = true;
       }
     }
@@ -489,21 +486,21 @@ int main()
       std::cout << '\n';
       if (!overflow)
       {
-        sums.push_back(static_cast< long long >(sum));
+        sums.push_back(sum);
       }
     }
   }
 
   if (overflow)
   {
-    std::cerr << "Overflow occurred while summing numbers\n";
+    std::cerr << "Formed lists with exit code 1 and error message in standard error because of overflow\n";
     return 1;
   }
 
   if (!sums.empty())
   {
     first = true;
-    for (List< long long >::const_iterator it = sums.begin(); it != sums.end(); ++it)
+    for (List< unsigned long long >::const_iterator it = sums.begin(); it != sums.end(); ++it)
     {
       if (!first)
       {
