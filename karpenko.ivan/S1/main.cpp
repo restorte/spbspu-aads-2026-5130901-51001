@@ -373,7 +373,7 @@ namespace karpenko
   bool read_sequence(
     std::istream& in,
     std::string& name,
-    List< int >& numbers)
+    List< size_t >& numbers)
   {
     if (!(in >> name))
     {
@@ -382,7 +382,7 @@ namespace karpenko
     numbers.clear();
     while (in.peek() != '\n' && in.peek() != EOF)
     {
-      int value = 0;
+      size_t value = 0;
       if (in >> value)
       {
         numbers.push_back(value);
@@ -403,12 +403,12 @@ int main()
 {
   using namespace karpenko;
 
-  List< std::pair< std::string, List< int > > > sequences;
+  List< std::pair< std::string, List< size_t > > > sequences;
 
   while (true)
   {
     std::string name;
-    List< int > numbers;
+    List< size_t > numbers;
     if (!read_sequence(std::cin, name, numbers))
     {
       break;
@@ -423,7 +423,7 @@ int main()
   }
 
   bool first = true;
-  for (List< std::pair< std::string, List< int > > >::const_iterator it =
+  for (List< std::pair< std::string, List< size_t > > >::const_iterator it =
          sequences.begin(); it != sequences.end(); ++it)
   {
     if (!first)
@@ -436,7 +436,7 @@ int main()
   std::cout << '\n';
 
   size_t max_len = 0;
-  for (List< std::pair< std::string, List< int > > >::const_iterator it =
+  for (List< std::pair< std::string, List< size_t > > >::const_iterator it =
          sequences.begin(); it != sequences.end(); ++it)
   {
     size_t len = it->second.size();
@@ -447,17 +447,17 @@ int main()
   }
 
   List< size_t > sums;
-  bool overflow = false;
+  bool has_any_element = false;
 
   for (size_t pos = 0; pos < max_len; ++pos)
   {
     size_t sum = 0;
     bool has_element = false;
 
-    for (List< std::pair< std::string, List< int > > >::const_iterator
+    for (List< std::pair< std::string, List< size_t > > >::const_iterator
            seq_it = sequences.begin(); seq_it != sequences.end(); ++seq_it)
     {
-      List< int >::const_iterator num_it = seq_it->second.begin();
+      List< size_t >::const_iterator num_it = seq_it->second.begin();
       for (size_t i = 0; i < pos && num_it != seq_it->second.end(); ++i)
       {
         ++num_it;
@@ -471,29 +471,28 @@ int main()
         }
         std::cout << *num_it;
 
-        if (*num_it > 0 && sum > std::numeric_limits< size_t >::max() - static_cast< size_t >(*num_it))
+        if (sum > std::numeric_limits< size_t >::max() - *num_it)
         {
-          overflow = true;
+          std::cerr << "Formed lists with exit code 1 and error message in standard error because of overflow\n";
+          return 1;
         }
-        sum += static_cast< size_t >(*num_it);
+        sum += *num_it;
         has_element = true;
+        has_any_element = true;
       }
     }
 
     if (has_element)
     {
       std::cout << '\n';
-      if (!overflow)
-      {
-        sums.push_back(sum);
-      }
+      sums.push_back(sum);
     }
   }
 
-  if (overflow)
+  if (!has_any_element)
   {
-    std::cerr << "Formed lists with exit code 1 and error message in standard error because of overflow\n";
-    return 1;
+    std::cout << "0\n";
+    return 0;
   }
 
   if (!sums.empty())
@@ -509,10 +508,6 @@ int main()
       first = false;
     }
     std::cout << '\n';
-  }
-  else
-  {
-    std::cout << "0\n";
   }
 
   return 0;
