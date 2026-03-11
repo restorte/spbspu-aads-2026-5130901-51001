@@ -227,6 +227,127 @@ namespace karpenko
       return *const_iterator(tail_);
     }
 
+    void push_front(const T& value)
+    {
+      insert_after(begin(), value);
+    }
+
+    void push_front(T&& value)
+    {
+      insert_after(begin(), std::move(value));
+    }
+
+    void push_back(const T& value)
+    {
+      if (empty())
+      {
+        push_front(value);
+      }
+      else
+      {
+        insert_after(iterator(tail_), value);
+      }
+    }
+
+    void push_back(T&& value)
+    {
+      if (empty())
+      {
+        push_front(std::move(value));
+      }
+      else
+      {
+        insert_after(iterator(tail_), std::move(value));
+      }
+    }
+
+    void pop_front()
+    {
+      assert(!empty());
+      detail::NodeBase* old = head_->next;
+      head_->next = old->next;
+      if (tail_ == old)
+      {
+        tail_ = head_;
+      }
+      detail::Node< T >* node_to_delete = static_cast< detail::Node< T >* >(old);
+      delete node_to_delete;
+    }
+
+    void pop_back()
+    {
+      assert(!empty());
+      if (head_->next == tail_)
+      {
+        pop_front();
+        return;
+      }
+      detail::NodeBase* prev = head_->next;
+      while (prev->next != tail_)
+      {
+        prev = prev->next;
+      }
+      detail::Node< T >* node_to_delete = static_cast< detail::Node< T >* >(tail_);
+      delete node_to_delete;
+      tail_ = prev;
+      tail_->next = head_;
+    }
+
+    iterator insert_after(iterator pos, const T& value)
+    {
+      detail::Node< T >* new_node = new detail::Node< T >(pos.get_ptr()->next, value);
+      pos.get_ptr()->next = new_node;
+      if (tail_ == pos.get_ptr())
+      {
+        tail_ = new_node;
+      }
+      return iterator(new_node);
+    }
+
+    iterator insert_after(iterator pos, T&& value)
+    {
+      detail::Node< T >* new_node = new detail::Node< T >(pos.get_ptr()->next, std::move(value));
+      pos.get_ptr()->next = new_node;
+      if (tail_ == pos.get_ptr())
+      {
+        tail_ = new_node;
+      }
+      return iterator(new_node);
+    }
+
+    iterator erase_after(iterator pos)
+    {
+      assert(pos.get_ptr() != head_);
+      assert(pos.get_ptr()->next != head_);
+      detail::NodeBase* to_delete = pos.get_ptr()->next;
+      pos.get_ptr()->next = to_delete->next;
+      if (tail_ == to_delete)
+      {
+        tail_ = pos.get_ptr();
+      }
+      detail::Node< T >* node_to_delete = static_cast< detail::Node< T >* >(to_delete);
+      delete node_to_delete;
+      return iterator(pos.get_ptr()->next);
+    }
+
+    void clear() noexcept
+    {
+      while (!empty())
+      {
+        pop_front();
+      }
+    }
+
+    void swap(List& other) noexcept
+    {
+      detail::NodeBase* temp_head = head_;
+      detail::NodeBase* temp_tail = tail_;
+      head_ = other.head_;
+      tail_ = other.tail_;
+      other.head_ = temp_head;
+      other.tail_ = temp_tail;
+    }
+
     size_type size() const noexcept
     {
       size_type count = 0;
@@ -236,7 +357,17 @@ namespace karpenko
       }
       return count;
     }
+
+  private:
+    detail::NodeBase* head_;
+    detail::NodeBase* tail_;
   };
+
+  template< typename T >
+  void swap(List< T >& lhs, List< T >& rhs) noexcept
+  {
+    lhs.swap(rhs);
+  }
 }
 
 int main()
