@@ -446,12 +446,50 @@ int main()
     }
   }
 
+  bool overflow = false;
   List< size_t > sums;
-  bool has_any_element = false;
 
-  for (size_t pos = 0; pos < max_len; ++pos)
+  for (size_t pos = 0; pos < max_len && !overflow; ++pos)
   {
     size_t sum = 0;
+    bool has_element = false;
+
+    for (List< std::pair< std::string, List< size_t > > >::const_iterator
+           seq_it = sequences.begin(); seq_it != sequences.end(); ++seq_it)
+    {
+      List< size_t >::const_iterator num_it = seq_it->second.begin();
+      for (size_t i = 0; i < pos && num_it != seq_it->second.end(); ++i)
+      {
+        ++num_it;
+      }
+
+      if (num_it != seq_it->second.end())
+      {
+        if (sum > std::numeric_limits< size_t >::max() - *num_it)
+        {
+          overflow = true;
+          break;
+        }
+        sum += *num_it;
+        has_element = true;
+      }
+    }
+
+    if (has_element && !overflow)
+    {
+      sums.push_back(sum);
+    }
+  }
+
+  if (overflow)
+  {
+    std::cerr << "Formed lists with exit code 1 and error message in standard error because of overflow\n";
+    return 1;
+  }
+
+  bool has_any_element = false;
+  for (size_t pos = 0; pos < max_len; ++pos)
+  {
     bool has_element = false;
 
     for (List< std::pair< std::string, List< size_t > > >::const_iterator
@@ -470,13 +508,6 @@ int main()
           std::cout << ' ';
         }
         std::cout << *num_it;
-
-        if (sum > std::numeric_limits< size_t >::max() - *num_it)
-        {
-          std::cerr << "Formed lists with exit code 1 and error message in standard error because of overflow\n";
-          return 1;
-        }
-        sum += *num_it;
         has_element = true;
         has_any_element = true;
       }
@@ -485,7 +516,6 @@ int main()
     if (has_element)
     {
       std::cout << '\n';
-      sums.push_back(sum);
     }
   }
 
