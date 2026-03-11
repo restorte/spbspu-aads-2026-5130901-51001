@@ -8,6 +8,8 @@
 
 namespace karpenko
 {
+  const size_t MAX = std::numeric_limits< size_t >::max();
+
   namespace detail
   {
     struct NodeBase
@@ -195,6 +197,15 @@ namespace karpenko
       return iterator(head_);
     }
     const_iterator end() const noexcept
+    {
+      return const_iterator(head_);
+    }
+
+    const_iterator cbegin() const noexcept
+    {
+      return const_iterator(head_->next);
+    }
+    const_iterator cend() const noexcept
     {
       return const_iterator(head_);
     }
@@ -422,61 +433,9 @@ int main()
     return 0;
   }
 
-  size_t max_len = 0;
-  for (List< std::pair< std::string, List< size_t > > >::const_iterator it =
-         sequences.begin(); it != sequences.end(); ++it)
-  {
-    size_t len = it->second.size();
-    if (len > max_len)
-    {
-      max_len = len;
-    }
-  }
-
-  bool overflow = false;
-  List< size_t > sums;
-
-  for (size_t pos = 0; pos < max_len && !overflow; ++pos)
-  {
-    size_t sum = 0;
-    bool has_element = false;
-
-    for (List< std::pair< std::string, List< size_t > > >::const_iterator
-           seq_it = sequences.begin(); seq_it != sequences.end(); ++seq_it)
-    {
-      List< size_t >::const_iterator num_it = seq_it->second.begin();
-      for (size_t i = 0; i < pos && num_it != seq_it->second.end(); ++i)
-      {
-        ++num_it;
-      }
-
-      if (num_it != seq_it->second.end())
-      {
-        if (sum > std::numeric_limits< size_t >::max() - *num_it)
-        {
-          overflow = true;
-          break;
-        }
-        sum += *num_it;
-        has_element = true;
-      }
-    }
-
-    if (has_element && !overflow)
-    {
-      sums.push_back(sum);
-    }
-  }
-
-  if (overflow)
-  {
-    std::cerr << "Formed lists with exit code 1 and error message in standard error because of overflow\n";
-    return 1;
-  }
-
   bool first = true;
-  for (List< std::pair< std::string, List< size_t > > >::const_iterator it =
-         sequences.begin(); it != sequences.end(); ++it)
+  for (List< std::pair< std::string, List< size_t > > >::iterator it = sequences.begin(); 
+       it != sequences.end(); ++it)
   {
     if (!first)
     {
@@ -487,58 +446,112 @@ int main()
   }
   std::cout << '\n';
 
-  bool has_any_element = false;
-  for (size_t pos = 0; pos < max_len; ++pos)
+  size_t max_len = 0;
+  for (List< std::pair< std::string, List< size_t > > >::const_iterator it = sequences.cbegin(); 
+       it != sequences.cend(); ++it)
   {
-    bool has_element = false;
-
-    for (List< std::pair< std::string, List< size_t > > >::const_iterator
-           seq_it = sequences.begin(); seq_it != sequences.end(); ++seq_it)
+    size_t len = it->second.size();
+    if (len > max_len)
     {
-      List< size_t >::const_iterator num_it = seq_it->second.begin();
-      for (size_t i = 0; i < pos && num_it != seq_it->second.end(); ++i)
-      {
-        ++num_it;
-      }
-
-      if (num_it != seq_it->second.end())
-      {
-        if (has_element)
-        {
-          std::cout << ' ';
-        }
-        std::cout << *num_it;
-        has_element = true;
-        has_any_element = true;
-      }
-    }
-
-    if (has_element)
-    {
-      std::cout << '\n';
+      max_len = len;
     }
   }
 
-  if (!has_any_element)
+  List< List< size_t > > transposed;
+  bool has_numbers = false;
+
+  for (size_t pos = 0; pos < max_len; ++pos)
+  {
+    List< size_t > new_seq;
+    
+    for (List< std::pair< std::string, List< size_t > > >::const_iterator seq_it = sequences.cbegin(); 
+         seq_it != sequences.cend(); ++seq_it)
+    {
+      List< size_t >::const_iterator num_it = seq_it->second.begin();
+      size_t curr = 0;
+      
+      while (curr < pos && num_it != seq_it->second.end())
+      {
+        ++curr;
+        ++num_it;
+      }
+      
+      if (num_it != seq_it->second.end())
+      {
+        new_seq.push_back(*num_it);
+        has_numbers = true;
+      }
+    }
+    
+    if (!new_seq.empty())
+    {
+      transposed.push_back(std::move(new_seq));
+    }
+  }
+
+  if (!has_numbers)
   {
     std::cout << "0\n";
     return 0;
   }
 
-  if (!sums.empty())
+  for (List< List< size_t > >::iterator tit = transposed.begin(); 
+       tit != transposed.end(); ++tit)
   {
-    first = true;
-    for (List< size_t >::const_iterator it = sums.begin(); it != sums.end(); ++it)
+    bool first_in_row = true;
+    for (List< size_t >::const_iterator nit = tit->begin(); 
+         nit != tit->end(); ++nit)
     {
-      if (!first)
+      if (!first_in_row)
       {
         std::cout << ' ';
       }
-      std::cout << *it;
-      first = false;
+      std::cout << *nit;
+      first_in_row = false;
     }
     std::cout << '\n';
   }
+
+  List< size_t > sums;
+  
+  for (List< List< size_t > >::const_iterator tit = transposed.cbegin(); 
+       tit != transposed.cend(); ++tit)
+  {
+    size_t sum = 0;
+    
+    try
+    {
+      for (List< size_t >::const_iterator nit = tit->begin(); 
+           nit != tit->end(); ++nit)
+      {
+        if (sum > MAX - *nit)
+        {
+          throw std::overflow_error("Sum overflow");
+        }
+        sum += *nit;
+      }
+    }
+    catch (const std::overflow_error& e)
+    {
+      std::cerr << "Formed lists with exit code 1 and error message in standard error because of overflow\n";
+      return 1;
+    }
+    
+    sums.push_back(sum);
+  }
+
+  first = true;
+  for (List< size_t >::const_iterator sit = sums.cbegin(); 
+       sit != sums.cend(); ++sit)
+  {
+    if (!first)
+    {
+      std::cout << ' ';
+    }
+    std::cout << *sit;
+    first = false;
+  }
+  std::cout << '\n';
 
   return 0;
 }
