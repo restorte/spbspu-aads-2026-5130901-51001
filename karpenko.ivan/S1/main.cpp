@@ -400,5 +400,100 @@ namespace karpenko
 
 int main()
 {
+  using namespace karpenko;
 
+  List< std::pair< std::string, List< int > > > sequences;
+
+  while (true)
+  {
+    std::string name;
+    List< int > numbers;
+    if (!read_sequence(std::cin, name, numbers))
+    {
+      break;
+    }
+    sequences.push_back(std::make_pair(name, std::move(numbers)));
+  }
+
+  if (sequences.empty())
+  {
+    std::cout << "0\n";
+    return 0;
+  }
+
+  bool first = true;
+  for (List< std::pair< std::string, List< int > > >::const_iterator it =
+         sequences.begin(); it != sequences.end(); ++it)
+  {
+    if (!first)
+    {
+      std::cout << ' ';
+    }
+    std::cout << it->first;
+    first = false;
+  }
+  std::cout << '\n';
+
+  size_t max_len = 0;
+  for (List< std::pair< std::string, List< int > > >::const_iterator it =
+         sequences.begin(); it != sequences.end(); ++it)
+  {
+    size_t len = it->second.size();
+    if (len > max_len)
+    {
+      max_len = len;
+    }
+  }
+
+  List< long long > sums;
+
+  for (size_t pos = 0; pos < max_len; ++pos)
+  {
+    long long sum = 0;
+    bool has_element = false;
+
+    for (List< std::pair< std::string, List< int > > >::const_iterator
+           seq_it = sequences.begin(); seq_it != sequences.end(); ++seq_it)
+    {
+      List< int >::const_iterator num_it = seq_it->second.begin();
+      for (size_t i = 0; i < pos && num_it != seq_it->second.end(); ++i)
+      {
+        ++num_it;
+      }
+
+      if (num_it != seq_it->second.end())
+      {
+        if (has_element)
+        {
+          std::cout << ' ';
+        }
+        std::cout << *num_it;
+        sum += *num_it;
+        has_element = true;
+      }
+    }
+
+    if (has_element)
+    {
+      std::cout << '\n';
+      sums.push_back(sum);
+    }
+  }
+
+  if (!sums.empty())
+  {
+    first = true;
+    for (List< long long >::const_iterator it = sums.begin(); it != sums.end(); ++it)
+    {
+      if (!first)
+      {
+        std::cout << ' ';
+      }
+      std::cout << *it;
+      first = false;
+    }
+    std::cout << '\n';
+  }
+
+  return 0;
 }
