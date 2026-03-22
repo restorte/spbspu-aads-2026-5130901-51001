@@ -158,6 +158,6 @@ long long evaluate(const std::string& line) {
 }
 
 }
-} 
+}
 
 #endif
