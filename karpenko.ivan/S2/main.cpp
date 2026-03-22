@@ -1,5 +1,8 @@
 #include "../common/list.hpp"
 #include <iostream>
+#include <sstream>
+#include <string>
+#include <cctype>
 #include <stdexcept>
 
 namespace karpenko {
@@ -17,6 +20,11 @@ public:
   bool empty() const noexcept
   {
     return list_.empty();
+  }
+
+  size_t size() const noexcept
+  {
+    return list_.size();
   }
 
   void push(const T& value)
@@ -70,6 +78,11 @@ public:
     return list_.empty();
   }
 
+  size_t size() const noexcept
+  {
+    return list_.size();
+  }
+
   void push(const T& value)
   {
     list_.push_back(value);
@@ -102,19 +115,148 @@ public:
     return list_.front();
   }
 
+  T& back()
+  {
+    if (empty())
+    {
+      throw std::out_of_range("Queue::back(): empty queue");
+    }
+    return list_.back();
+  }
+
+  const T& back() const
+  {
+    if (empty())
+    {
+      throw std::out_of_range("Queue::back(): empty queue");
+    }
+    return list_.back();
+  }
+
 private:
   List<T> list_;
 };
+
+namespace evaluator {
+
+int priority(char op)
+{
+  switch (op)
+  {
+    case '+':
+    case '-':
+      return 1;
+    case '*':
+    case '/':
+    case '%':
+      return 2;
+    default:
+      return 0;
+  }
+}
+
+bool isNumber(const std::string& s)
+{
+  if (s.empty())
+  {
+    return false;
+  }
+  for (char c : s)
+  {
+    if (!std::isdigit(static_cast<unsigned char>(c)))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+Queue<std::string> toPostfix(const std::string& line)
+{
+  std::istringstream iss(line);
+  std::string token;
+  Stack<char> ops;
+  Queue<std::string> output;
+
+  while (iss >> token)
+  {
+    if (isNumber(token))
+    {
+      output.push(token);
+    }
+    else if (token == "(")
+    {
+      ops.push('(');
+    }
+    else if (token == ")")
+    {
+      while (!ops.empty() && ops.top() != '(')
+      {
+        output.push(std::string(1, ops.top()));
+        ops.pop();
+      }
+      if (ops.empty())
+      {
+        throw std::runtime_error("Mismatched parentheses");
+      }
+      ops.pop();
+    }
+    else if (token.size() == 1
+             && (token[0] == '+' || token[0] == '-' || token[0] == '*'
+                 || token[0] == '/' || token[0] == '%'))
+    {
+      char op = token[0];
+      while (!ops.empty()
+             && ops.top() != '('
+             && priority(ops.top()) >= priority(op))
+      {
+        output.push(std::string(1, ops.top()));
+        ops.pop();
+      }
+      ops.push(op);
+    }
+    else
+    {
+      throw std::runtime_error("Invalid token: " + token);
+    }
+  }
+
+  while (!ops.empty())
+  {
+    if (ops.top() == '(')
+    {
+      throw std::runtime_error("Mismatched parentheses");
+    }
+    output.push(std::string(1, ops.top()));
+    ops.pop();
+  }
+
+  return output;
+}
+
+}
 
 }
 
 int main()
 {
-  karpenko::Queue<int> q;
-  q.push(10);
-  q.push(20);
-  std::cout << "Front: " << q.front() << std::endl;
-  q.pop();
-  std::cout << "Front after pop: " << q.front() << std::endl;
+  using namespace karpenko;
+
+  std::string line = "1 + 2 * 3";
+  try
+  {
+    Queue<std::string> postfix = evaluator::toPostfix(line);
+    while (!postfix.empty())
+    {
+      std::cout << postfix.front() << " ";
+      postfix.pop();
+    }
+    std::cout << std::endl;
+  }
+  catch (const std::exception& e)
+  {
+    std::cerr << "Error: " << e.what() << std::endl;
+  }
+
   return 0;
 }
