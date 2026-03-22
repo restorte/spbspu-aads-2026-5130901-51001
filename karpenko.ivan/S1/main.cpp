@@ -4,6 +4,7 @@
 #include <utility>
 #include <cstddef>
 #include <limits>
+#include <climits>
 #include <stdexcept>
 
 namespace karpenko
@@ -151,9 +152,8 @@ int main()
       for (List< size_t >::const_iterator nit = tit->begin();
            nit != tit->end(); ++nit)
       {
-        if (sum > MAX - *nit)
-        {
-          throw std::overflow_error("Sum overflow");
+        if (sum > INT_MAX - *nit) {
+          throw std::overflow_error("sum overflow");
         }
         sum += *nit;
       }
