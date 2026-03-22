@@ -19,11 +19,13 @@ int main(int argc, char* argv[]) {
 
   Stack<long long> results;
   std::string line;
+  bool has_input = false;
 
   while (std::getline(*input, line)) {
     if (line.empty()) {
       continue;
     }
+    has_input = true;
 
     try {
       long long res = evaluator::evaluate(line);
@@ -34,8 +36,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  if (results.empty()) {
-    std::cout << "0\n";
+  if (!has_input) {
     return 0;
   }
 

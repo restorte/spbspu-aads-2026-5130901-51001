@@ -4,6 +4,8 @@
 #include "stack.hpp"
 #include "queue.hpp"
 #include <cctype>
+#include <climits>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -109,27 +111,57 @@ long long evaluatePostfix(Queue<std::string>& postfix) {
         long long res = 0;
 
         switch (op) {
-          case '+':
+          case '+': {
+            if ((rhs > 0 && lhs > std::numeric_limits<long long>::max() - rhs) ||
+                (rhs < 0 && lhs < std::numeric_limits<long long>::min() - rhs)) {
+              throw std::overflow_error("Addition overflow");
+            }
             res = lhs + rhs;
             break;
-          case '-':
+          }
+          case '-': {
+            if ((rhs < 0 && lhs > std::numeric_limits<long long>::max() + rhs) ||
+                (rhs > 0 && lhs < std::numeric_limits<long long>::min() + rhs)) {
+              throw std::overflow_error("Subtraction overflow");
+            }
             res = lhs - rhs;
             break;
-          case '*':
+          }
+          case '*': {
+            if (lhs > 0) {
+              if (rhs > 0 && lhs > std::numeric_limits<long long>::max() / rhs) {
+                throw std::overflow_error("Multiplication overflow");
+              }
+              if (rhs < 0 && rhs < std::numeric_limits<long long>::min() / lhs) {
+                throw std::overflow_error("Multiplication overflow");
+              }
+            } else if (lhs < 0) {
+              if (rhs > 0 && lhs < std::numeric_limits<long long>::min() / rhs) {
+                throw std::overflow_error("Multiplication overflow");
+              }
+              if (rhs < 0 && lhs < std::numeric_limits<long long>::max() / rhs) {
+                throw std::overflow_error("Multiplication overflow");
+              }
+            }
             res = lhs * rhs;
             break;
+          }
           case '/':
             if (rhs == 0) {
               throw std::runtime_error("Division by zero");
             }
             res = lhs / rhs;
             break;
-          case '%':
+          case '%': {
             if (rhs == 0) {
               throw std::runtime_error("Modulo by zero");
             }
             res = lhs % rhs;
+            if (res < 0) {
+              res += (rhs > 0 ? rhs : -rhs);
+            }
             break;
+          }
           case '|':
             res = lhs | rhs;
             break;
