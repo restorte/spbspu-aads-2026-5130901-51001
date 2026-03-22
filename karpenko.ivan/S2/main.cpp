@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 
   if (results.empty())
   {
-    std::cout << "0\n";
+    std::cout << '\n';
     return 0;
   }
 
