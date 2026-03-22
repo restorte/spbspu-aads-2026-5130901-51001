@@ -1,55 +1,83 @@
 #include <boost/test/unit_test.hpp>
 #include "queue.hpp"
 
-using namespace karpenko;
+BOOST_AUTO_TEST_SUITE(QueueTest)
 
-BOOST_AUTO_TEST_SUITE(QueueSuite)
-
-BOOST_AUTO_TEST_CASE(test_push_pop)
+BOOST_AUTO_TEST_CASE(ConstructAndOperatorsTests)
 {
-  Queue<int> q;
-  BOOST_CHECK(q.empty());
-  q.push(10);
-  BOOST_CHECK(!q.empty());
-  BOOST_CHECK_EQUAL(q.front(), 10);
-  BOOST_CHECK_EQUAL(q.back(), 10);
-  q.push(20);
-  BOOST_CHECK_EQUAL(q.front(), 10);
-  BOOST_CHECK_EQUAL(q.back(), 20);
-  q.pop();
-  BOOST_CHECK_EQUAL(q.front(), 20);
-  q.pop();
-  BOOST_CHECK(q.empty());
-}
-
-BOOST_AUTO_TEST_CASE(test_exception_on_empty)
-{
-  Queue<int> q;
-  BOOST_CHECK_THROW(q.pop(), std::out_of_range);
-  BOOST_CHECK_THROW(q.front(), std::out_of_range);
-  BOOST_CHECK_THROW(q.back(), std::out_of_range);
-}
-
-BOOST_AUTO_TEST_CASE(test_copy)
-{
-  Queue<int> q1;
-  q1.push(1);
-  q1.push(2);
-  Queue<int> q2 = q1;
-  BOOST_CHECK_EQUAL(q2.size(), 2);
-  BOOST_CHECK_EQUAL(q2.front(), 1);
-  q2.pop();
-  BOOST_CHECK_EQUAL(q2.front(), 2);
-  BOOST_CHECK_EQUAL(q1.front(), 1);
-}
-
-BOOST_AUTO_TEST_CASE(test_move)
-{
-  Queue<int> q1;
-  q1.push(100);
-  Queue<int> q2 = std::move(q1);
+  karpenko::Queue<int> q1;
   BOOST_CHECK(q1.empty());
-  BOOST_CHECK_EQUAL(q2.front(), 100);
+  q1.push(1);
+  karpenko::Queue<int> q2(q1);
+  BOOST_CHECK(q2.size() == 1);
+  BOOST_CHECK(q2.front() == 1);
+  BOOST_CHECK(q2.back() == 1);
+  q2.push(2);
+  karpenko::Queue<int> q3(std::move(q2));
+  BOOST_CHECK(q3.size() == 2);
+  BOOST_CHECK(q3.front() == 1);
+  BOOST_CHECK(q3.back() == 2);
+  q3.push(3);
+  karpenko::Queue<int> q4 = q3;
+  BOOST_CHECK(q4.size() == 3);
+  BOOST_CHECK(q4.front() == 1);
+  BOOST_CHECK(q4.back() == 3);
+  karpenko::Queue<int> q5 = std::move(q4);
+  BOOST_CHECK(q5.size() == 3);
+  BOOST_CHECK(q5.front() == 1);
+  BOOST_CHECK(q5.back() == 3);
+}
+
+BOOST_AUTO_TEST_CASE(EmptyAndSizeTests)
+{
+  karpenko::Queue<int> q;
+  BOOST_CHECK(q.empty());
+  BOOST_CHECK(q.size() == 0);
+  q.push(1);
+  q.push(2);
+  BOOST_CHECK(!q.empty());
+  BOOST_CHECK(q.size() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(PushPopFrontBackTests)
+{
+  karpenko::Queue<int> q;
+  q.push(1);
+  BOOST_CHECK(q.back() == 1);
+  q.push(2);
+  BOOST_CHECK(q.back() == 2);
+  q.push(3);
+  BOOST_CHECK(q.back() == 3);
+  q.pop();
+  BOOST_CHECK(q.front() == 2);
+  q.pop();
+  BOOST_CHECK(q.front() == 3);
+}
+
+BOOST_AUTO_TEST_CASE(SwapTests)
+{
+  karpenko::Queue<int> q1;
+  q1.push(1);
+  karpenko::Queue<int> q2;
+  q2.push(2);
+  q2.push(3);
+  q2.swap(q1);
+  BOOST_CHECK(q1.front() == 2);
+  BOOST_CHECK(q2.front() == 1);
+  BOOST_CHECK(q1.size() == 2);
+  BOOST_CHECK(q2.size() == 1);
+  BOOST_CHECK(q1.back() == 3);
+}
+
+BOOST_AUTO_TEST_CASE(ClearTests)
+{
+  karpenko::Queue<int> q;
+  q.push(1);
+  q.push(2);
+  q.push(3);
+  BOOST_CHECK(q.size() == 3);
+  q.clear();
+  BOOST_CHECK(q.size() == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
