@@ -234,6 +234,87 @@ Queue<std::string> toPostfix(const std::string& line)
   return output;
 }
 
+long long evaluatePostfix(Queue<std::string>& postfix)
+{
+  Stack<long long> values;
+
+  while (!postfix.empty())
+  {
+    std::string token = postfix.front();
+    postfix.pop();
+
+    if (isNumber(token))
+    {
+      values.push(std::stoll(token));
+    }
+    else if (token.size() == 1)
+    {
+      char op = token[0];
+      if (op == '+' || op == '-' || op == '*' || op == '/' || op == '%')
+      {
+        if (values.size() < 2)
+        {
+          throw std::runtime_error("Not enough operands for binary operator");
+        }
+        long long rhs = values.top();
+        values.pop();
+        long long lhs = values.top();
+        values.pop();
+        long long res = 0;
+
+        switch (op)
+        {
+          case '+':
+            res = lhs + rhs;
+            break;
+          case '-':
+            res = lhs - rhs;
+            break;
+          case '*':
+            res = lhs * rhs;
+            break;
+          case '/':
+            if (rhs == 0)
+            {
+              throw std::runtime_error("Division by zero");
+            }
+            res = lhs / rhs;
+            break;
+          case '%':
+            if (rhs == 0)
+            {
+              throw std::runtime_error("Modulo by zero");
+            }
+            res = lhs % rhs;
+            break;
+        }
+        values.push(res);
+      }
+      else
+      {
+        throw std::runtime_error("Unknown operator");
+      }
+    }
+    else
+    {
+      throw std::runtime_error("Invalid token in postfix");
+    }
+  }
+
+  if (values.size() != 1)
+  {
+    throw std::runtime_error("Invalid expression: leftover values");
+  }
+
+  return values.top();
+}
+
+long long evaluate(const std::string& line)
+{
+  Queue<std::string> postfix = toPostfix(line);
+  return evaluatePostfix(postfix);
+}
+
 }
 
 }
@@ -245,13 +326,8 @@ int main()
   std::string line = "1 + 2 * 3";
   try
   {
-    Queue<std::string> postfix = evaluator::toPostfix(line);
-    while (!postfix.empty())
-    {
-      std::cout << postfix.front() << " ";
-      postfix.pop();
-    }
-    std::cout << std::endl;
+    long long result = evaluator::evaluate(line);
+    std::cout << line << " = " << result << std::endl;
   }
   catch (const std::exception& e)
   {
