@@ -1,13 +1,12 @@
-#define BOOST_TEST_MODULE QueueTest
-
+#include <boost/test/unit_test.hpp>
 #include "queue.hpp"
-#include <boost/test/included/unit_test.hpp>
 
 using namespace karpenko;
 
 BOOST_AUTO_TEST_SUITE(QueueSuite)
 
-BOOST_AUTO_TEST_CASE(test_push_pop) {
+BOOST_AUTO_TEST_CASE(test_push_pop)
+{
   Queue<int> q;
   BOOST_CHECK(q.empty());
   q.push(10);
@@ -23,14 +22,16 @@ BOOST_AUTO_TEST_CASE(test_push_pop) {
   BOOST_CHECK(q.empty());
 }
 
-BOOST_AUTO_TEST_CASE(test_exception_on_empty) {
+BOOST_AUTO_TEST_CASE(test_exception_on_empty)
+{
   Queue<int> q;
   BOOST_CHECK_THROW(q.pop(), std::out_of_range);
   BOOST_CHECK_THROW(q.front(), std::out_of_range);
   BOOST_CHECK_THROW(q.back(), std::out_of_range);
 }
 
-BOOST_AUTO_TEST_CASE(test_copy) {
+BOOST_AUTO_TEST_CASE(test_copy)
+{
   Queue<int> q1;
   q1.push(1);
   q1.push(2);
@@ -42,7 +43,8 @@ BOOST_AUTO_TEST_CASE(test_copy) {
   BOOST_CHECK_EQUAL(q1.front(), 1);
 }
 
-BOOST_AUTO_TEST_CASE(test_move) {
+BOOST_AUTO_TEST_CASE(test_move)
+{
   Queue<int> q1;
   q1.push(100);
   Queue<int> q2 = std::move(q1);
