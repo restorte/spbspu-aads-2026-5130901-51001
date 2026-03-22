@@ -1,13 +1,12 @@
-#define BOOST_TEST_MODULE StackTest
-
+#include <boost/test/unit_test.hpp>
 #include "stack.hpp"
-#include <boost/test/included/unit_test.hpp>
 
 using namespace karpenko;
 
 BOOST_AUTO_TEST_SUITE(StackSuite)
 
-BOOST_AUTO_TEST_CASE(test_push_pop) {
+BOOST_AUTO_TEST_CASE(test_push_pop)
+{
   Stack<int> s;
   BOOST_CHECK(s.empty());
   s.push(10);
@@ -21,13 +20,15 @@ BOOST_AUTO_TEST_CASE(test_push_pop) {
   BOOST_CHECK(s.empty());
 }
 
-BOOST_AUTO_TEST_CASE(test_exception_on_empty) {
+BOOST_AUTO_TEST_CASE(test_exception_on_empty)
+{
   Stack<int> s;
   BOOST_CHECK_THROW(s.pop(), std::out_of_range);
   BOOST_CHECK_THROW(s.top(), std::out_of_range);
 }
 
-BOOST_AUTO_TEST_CASE(test_copy) {
+BOOST_AUTO_TEST_CASE(test_copy)
+{
   Stack<int> s1;
   s1.push(1);
   s1.push(2);
@@ -39,7 +40,8 @@ BOOST_AUTO_TEST_CASE(test_copy) {
   BOOST_CHECK_EQUAL(s1.top(), 2);
 }
 
-BOOST_AUTO_TEST_CASE(test_move) {
+BOOST_AUTO_TEST_CASE(test_move)
+{
   Stack<int> s1;
   s1.push(100);
   Stack<int> s2 = std::move(s1);
