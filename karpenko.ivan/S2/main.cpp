@@ -1,5 +1,6 @@
 #include "../common/list.hpp"
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <cctype>
@@ -319,20 +320,64 @@ long long evaluate(const std::string& line)
 
 }
 
-int main()
+int main(int argc, char* argv[])
 {
   using namespace karpenko;
 
-  std::string line = "1 + 2 * 3";
-  try
+  std::istream* input = &std::cin;
+  std::ifstream file;
+
+  if (argc >= 2)
   {
-    long long result = evaluator::evaluate(line);
-    std::cout << line << " = " << result << std::endl;
+    file.open(argv[1]);
+    if (!file)
+    {
+      std::cerr << "Error: cannot open file " << argv[1] << std::endl;
+      return 1;
+    }
+    input = &file;
   }
-  catch (const std::exception& e)
+
+  Stack<long long> results;
+  std::string line;
+
+  while (std::getline(*input, line))
   {
-    std::cerr << "Error: " << e.what() << std::endl;
+    if (line.empty())
+    {
+      continue;
+    }
+
+    try
+    {
+      long long res = evaluator::evaluate(line);
+      results.push(res);
+    }
+    catch (const std::exception& e)
+    {
+      std::cerr << "Error evaluating expression: " << e.what() << std::endl;
+      return 1;
+    }
   }
+
+  if (results.empty())
+  {
+    std::cout << "0\n";
+    return 0;
+  }
+
+  bool first = true;
+  while (!results.empty())
+  {
+    if (!first)
+    {
+      std::cout << ' ';
+    }
+    std::cout << results.top();
+    results.pop();
+    first = false;
+  }
+  std::cout << '\n';
 
   return 0;
 }
