@@ -144,6 +144,8 @@ int priority(char op)
 {
   switch (op)
   {
+    case '|':
+      return 0;
     case '+':
     case '-':
       return 1;
@@ -204,7 +206,7 @@ Queue<std::string> toPostfix(const std::string& line)
     }
     else if (token.size() == 1
              && (token[0] == '+' || token[0] == '-' || token[0] == '*'
-                 || token[0] == '/' || token[0] == '%'))
+                 || token[0] == '/' || token[0] == '%' || token[0] == '|'))
     {
       char op = token[0];
       while (!ops.empty()
@@ -251,7 +253,7 @@ long long evaluatePostfix(Queue<std::string>& postfix)
     else if (token.size() == 1)
     {
       char op = token[0];
-      if (op == '+' || op == '-' || op == '*' || op == '/' || op == '%')
+      if (op == '+' || op == '-' || op == '*' || op == '/' || op == '%' || op == '|')
       {
         if (values.size() < 2)
         {
@@ -287,6 +289,9 @@ long long evaluatePostfix(Queue<std::string>& postfix)
               throw std::runtime_error("Modulo by zero");
             }
             res = lhs % rhs;
+            break;
+          case '|':
+            res = lhs | rhs;
             break;
         }
         values.push(res);
