@@ -49,4 +49,31 @@ BOOST_AUTO_TEST_CASE(test_move)
   BOOST_CHECK_EQUAL(s2.top(), 100);
 }
 
+BOOST_AUTO_TEST_CASE(test_swap)
+{
+  Stack<int> s1;
+  s1.push(1);
+  s1.push(2);
+  Stack<int> s2;
+  s2.push(3);
+  s2.push(4);
+  s1.swap(s2);
+  BOOST_CHECK_EQUAL(s1.top(), 4);
+  BOOST_CHECK_EQUAL(s2.top(), 2);
+  BOOST_CHECK_EQUAL(s1.size(), 2);
+  BOOST_CHECK_EQUAL(s2.size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(test_clear)
+{
+  Stack<int> s;
+  s.push(1);
+  s.push(2);
+  s.push(3);
+  BOOST_CHECK_EQUAL(s.size(), 3);
+  s.clear();
+  BOOST_CHECK(s.empty());
+  BOOST_CHECK_EQUAL(s.size(), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
