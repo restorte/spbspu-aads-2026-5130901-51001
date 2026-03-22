@@ -6,7 +6,7 @@
 
 namespace karpenko {
 
-template<typename T>
+template < typename T >
 class Stack
 {
 public:
@@ -38,8 +38,7 @@ public:
 
   void pop()
   {
-    if (empty())
-    {
+    if (empty()) {
       throw std::out_of_range("Stack::pop(): empty stack");
     }
     list_.pop_front();
@@ -47,8 +46,7 @@ public:
 
   T& top()
   {
-    if (empty())
-    {
+    if (empty()) {
       throw std::out_of_range("Stack::top(): empty stack");
     }
     return list_.front();
@@ -56,8 +54,7 @@ public:
 
   const T& top() const
   {
-    if (empty())
-    {
+    if (empty()) {
       throw std::out_of_range("Stack::top(): empty stack");
     }
     return list_.front();
@@ -74,11 +71,11 @@ public:
   }
 
 private:
-  List<T> list_;
+  List< T > list_;
 };
 
-template<typename T>
-void swap(Stack<T>& lhs, Stack<T>& rhs) noexcept
+template < typename T >
+void swap(Stack< T >& lhs, Stack< T >& rhs) noexcept
 {
   lhs.swap(rhs);
 }

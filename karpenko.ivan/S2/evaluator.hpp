@@ -34,18 +34,18 @@ bool isNumber(const std::string& s) {
     return false;
   }
   for (char c : s) {
-    if (!std::isdigit(static_cast<unsigned char>(c))) {
+    if (!std::isdigit(static_cast< unsigned char >(c))) {
       return false;
     }
   }
   return true;
 }
 
-Queue<std::string> toPostfix(const std::string& line) {
+Queue< std::string > toPostfix(const std::string& line) {
   std::istringstream iss(line);
   std::string token;
-  Stack<char> ops;
-  Queue<std::string> output;
+  Stack< char > ops;
+  Queue< std::string > output;
 
   while (iss >> token) {
     if (isNumber(token)) {
@@ -87,8 +87,8 @@ Queue<std::string> toPostfix(const std::string& line) {
   return output;
 }
 
-long long evaluatePostfix(Queue<std::string>& postfix) {
-  Stack<long long> values;
+long long evaluatePostfix(Queue< std::string >& postfix) {
+  Stack< long long > values;
 
   while (!postfix.empty()) {
     std::string token = postfix.front();
@@ -112,16 +112,16 @@ long long evaluatePostfix(Queue<std::string>& postfix) {
 
         switch (op) {
           case '+': {
-            if ((rhs > 0 && lhs > std::numeric_limits<long long>::max() - rhs) ||
-                (rhs < 0 && lhs < std::numeric_limits<long long>::min() - rhs)) {
+            if ((rhs > 0 && lhs > std::numeric_limits< long long >::max() - rhs) ||
+                (rhs < 0 && lhs < std::numeric_limits< long long >::min() - rhs)) {
               throw std::overflow_error("Addition overflow");
             }
             res = lhs + rhs;
             break;
           }
           case '-': {
-            if ((rhs < 0 && lhs > std::numeric_limits<long long>::max() + rhs) ||
-                (rhs > 0 && lhs < std::numeric_limits<long long>::min() + rhs)) {
+            if ((rhs < 0 && lhs > std::numeric_limits< long long >::max() + rhs) ||
+                (rhs > 0 && lhs < std::numeric_limits< long long >::min() + rhs)) {
               throw std::overflow_error("Subtraction overflow");
             }
             res = lhs - rhs;
@@ -129,17 +129,17 @@ long long evaluatePostfix(Queue<std::string>& postfix) {
           }
           case '*': {
             if (lhs > 0) {
-              if (rhs > 0 && lhs > std::numeric_limits<long long>::max() / rhs) {
+              if (rhs > 0 && lhs > std::numeric_limits< long long >::max() / rhs) {
                 throw std::overflow_error("Multiplication overflow");
               }
-              if (rhs < 0 && rhs < std::numeric_limits<long long>::min() / lhs) {
+              if (rhs < 0 && rhs < std::numeric_limits< long long >::min() / lhs) {
                 throw std::overflow_error("Multiplication overflow");
               }
             } else if (lhs < 0) {
-              if (rhs > 0 && lhs < std::numeric_limits<long long>::min() / rhs) {
+              if (rhs > 0 && lhs < std::numeric_limits< long long >::min() / rhs) {
                 throw std::overflow_error("Multiplication overflow");
               }
-              if (rhs < 0 && lhs < std::numeric_limits<long long>::max() / rhs) {
+              if (rhs < 0 && lhs < std::numeric_limits< long long >::max() / rhs) {
                 throw std::overflow_error("Multiplication overflow");
               }
             }
@@ -185,7 +185,7 @@ long long evaluatePostfix(Queue<std::string>& postfix) {
 }
 
 long long evaluate(const std::string& line) {
-  Queue<std::string> postfix = toPostfix(line);
+  Queue< std::string > postfix = toPostfix(line);
   return evaluatePostfix(postfix);
 }
 

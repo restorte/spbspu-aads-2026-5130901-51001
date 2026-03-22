@@ -6,7 +6,7 @@
 
 namespace karpenko {
 
-template<typename T>
+template < typename T >
 class Queue
 {
 public:
@@ -38,8 +38,7 @@ public:
 
   void pop()
   {
-    if (empty())
-    {
+    if (empty()) {
       throw std::out_of_range("Queue::pop(): empty queue");
     }
     list_.pop_front();
@@ -47,8 +46,7 @@ public:
 
   T& front()
   {
-    if (empty())
-    {
+    if (empty()) {
       throw std::out_of_range("Queue::front(): empty queue");
     }
     return list_.front();
@@ -56,8 +54,7 @@ public:
 
   const T& front() const
   {
-    if (empty())
-    {
+    if (empty()) {
       throw std::out_of_range("Queue::front(): empty queue");
     }
     return list_.front();
@@ -65,8 +62,7 @@ public:
 
   T& back()
   {
-    if (empty())
-    {
+    if (empty()) {
       throw std::out_of_range("Queue::back(): empty queue");
     }
     return list_.back();
@@ -74,8 +70,7 @@ public:
 
   const T& back() const
   {
-    if (empty())
-    {
+    if (empty()) {
       throw std::out_of_range("Queue::back(): empty queue");
     }
     return list_.back();
@@ -92,11 +87,11 @@ public:
   }
 
 private:
-  List<T> list_;
+  List< T > list_;
 };
 
-template<typename T>
-void swap(Queue<T>& lhs, Queue<T>& rhs) noexcept
+template < typename T >
+void swap(Queue< T >& lhs, Queue< T >& rhs) noexcept
 {
   lhs.swap(rhs);
 }
