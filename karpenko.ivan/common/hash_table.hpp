@@ -33,6 +33,17 @@ struct Vector
 
   void reserve(size_t k);
   void shrinkToFit();
+  void repeatPushBack(const T& val, size_t k);
+  template <class IT>
+  void rangedPushBack(IT beg, size_t count);
+  void repeatInsert(size_t id, const T& val, size_t k);
+
+  bool operator==(const Vector<T>& rhs) const noexcept;
+  bool operator!=(const Vector<T>& rhs) const noexcept;
+
+  void insert(size_t pos, const T& val);
+  void insert(size_t pos, const Vector<T>& rhs, size_t b, size_t e);
+  void erase(size_t pos);
 };
 
 }
