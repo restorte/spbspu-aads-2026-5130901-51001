@@ -2,8 +2,11 @@
 #define HASH_TABLE_HPP
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
+#include <functional>
 #include <initializer_list>
 #include <stdexcept>
 #include <string>
@@ -14,21 +17,21 @@
 namespace karpenko
 {
 
-template <class T>
+template < class T >
 struct Vector
 {
   Vector();
   Vector(size_t s, const T& val);
   ~Vector();
 
-  Vector(std::initializer_list<T> il);
+  Vector(std::initializer_list< T > il);
 
-  Vector(Vector<T>&&) noexcept;
-  Vector<T>& operator=(Vector<T>&&) noexcept;
+  Vector(Vector< T >&&) noexcept;
+  Vector< T >& operator=(Vector< T >&&) noexcept;
   void pushFront(const T& val);
-  void swap(Vector<T>&) noexcept;
-  Vector(const Vector<T>&);
-  Vector<T>& operator=(const Vector<T>&);
+  void swap(Vector< T >&) noexcept;
+  Vector(const Vector< T >&);
+  Vector< T >& operator=(const Vector< T >&);
   bool isEmpty() const noexcept;
   size_t getSize() const noexcept;
   size_t getCapacity() const noexcept;
@@ -37,15 +40,15 @@ struct Vector
   void reserve(size_t k);
   void shrinkToFit();
   void repeatPushBack(const T& val, size_t k);
-  template <class IT>
+  template < class IT >
   void rangedPushBack(IT beg, size_t count);
   void repeatInsert(size_t id, const T& val, size_t k);
 
-  bool operator==(const Vector<T>& rhs) const noexcept;
-  bool operator!=(const Vector<T>& rhs) const noexcept;
+  bool operator==(const Vector< T >& rhs) const noexcept;
+  bool operator!=(const Vector< T >& rhs) const noexcept;
 
   void insert(size_t pos, const T& val);
-  void insert(size_t pos, const Vector<T>& rhs, size_t b, size_t e);
+  void insert(size_t pos, const Vector< T >& rhs, size_t b, size_t e);
   void erase(size_t pos);
 
   struct VectorIterator;
@@ -57,7 +60,7 @@ struct Vector
   void insert(iterator pos, const T& val);
   void erase(iterator pos);
 
-  template <class IT>
+  template < class IT >
   void insert(iterator pos, IT begin, IT end);
 
   void erase(iterator first, iterator last);
@@ -78,138 +81,62 @@ private:
   void deallocate();
   void destroyRange(size_t start, size_t end);
   void constructRange(size_t start, size_t end, const T& val);
-  template <class IT>
+  template < class IT >
   void constructFromRange(size_t start, IT begin, IT end);
 };
 
-template <class T>
-Vector<T>::Vector() : data_(nullptr), size_(0), capacity_(0)
+template < class T >
+void Vector< T >::constructRange(size_t start, size_t end, const T& val)
 {
-}
-
-template <class T>
-Vector<T>::Vector(size_t size, const T& val)
-  : data_(nullptr), size_(size), capacity_(size)
-{
-  if (size_ == 0)
-  {
-    return;
-  }
-  data_ = static_cast<T*>(::operator new(sizeof(T) * size_));
-  for (size_t i = 0; i < size_; ++i)
+  for (size_t i = start; i < end; ++i)
   {
     new (data_ + i) T(val);
   }
 }
 
-template <class T>
-Vector<T>::Vector(size_t size)
-  : data_(nullptr), size_(0), capacity_(0)
+template < class T >
+template < class IT >
+void Vector< T >::constructFromRange(size_t start, IT begin, IT end)
 {
-  reserve(size);
-}
-
-template <class T>
-Vector<T>::Vector(std::initializer_list<T> il)
-  : data_(nullptr), size_(0), capacity_(0)
-{
-  reserve(il.size());
-  size_ = il.size();
-  size_t i = 0;
-  for (auto it = il.begin(); it != il.end(); ++it, ++i)
+  size_t i = start;
+  for (IT it = begin; it != end; ++it, ++i)
   {
     new (data_ + i) T(*it);
   }
 }
 
-template <class T>
-Vector<T>::Vector(Vector<T>&& rhs) noexcept
-  : data_(rhs.data_), size_(rhs.size_), capacity_(rhs.capacity_)
+template < class T >
+void Vector< T >::destroyRange(size_t start, size_t end)
 {
-  rhs.data_ = nullptr;
-  rhs.size_ = 0;
-  rhs.capacity_ = 0;
-}
-
-template <class T>
-Vector<T>& Vector<T>::operator=(Vector<T>&& rhs) noexcept
-{
-  if (this != &rhs)
+  for (size_t i = start; i < end; ++i)
   {
-    destroyRange(0, size_);
-    deallocate();
-    data_ = rhs.data_;
-    size_ = rhs.size_;
-    capacity_ = rhs.capacity_;
-    rhs.data_ = nullptr;
-    rhs.size_ = 0;
-    rhs.capacity_ = 0;
-  }
-  return *this;
-}
-
-template <class T>
-Vector<T>::Vector(const Vector<T>& rhs)
-  : data_(nullptr), size_(0), capacity_(0)
-{
-  reserve(rhs.size_);
-  size_ = rhs.size_;
-  for (size_t i = 0; i < size_; ++i)
-  {
-    new (data_ + i) T(rhs.data_[i]);
-  }
-}
-
-template <class T>
-Vector<T>& Vector<T>::operator=(const Vector<T>& rhs)
-{
-  if (this != &rhs)
-  {
-    Vector<T> cpy(rhs);
-    swap(cpy);
-  }
-  return *this;
-}
-
-template <class T>
-Vector<T>::~Vector()
-{
-  destroyRange(0, size_);
-  deallocate();
-}
-
-template <class T>
-void Vector<T>::pushBack(const T& val)
-{
-  if (size_ == capacity_)
-  {
-    size_t newCapacity = capacity_ == 0 ? 1 : capacity_ * 2;
-    reserve(newCapacity);
-  }
-  new (data_ + size_) T(val);
-  ++size_;
-}
-
-template <class T>
-void Vector<T>::reserve(size_t k)
-{
-  if (k <= capacity_)
-  {
-    return;
-  }
-  T* newData = static_cast<T*>(::operator new(sizeof(T) * k));
-  for (size_t i = 0; i < size_; ++i)
-  {
-    new (newData + i) T(std::move(data_[i]));
     data_[i].~T();
   }
-  deallocate();
-  data_ = newData;
-  capacity_ = k;
 }
 
-template <class T>
-void Vector<T>::shrinkToFit()
+template < class T >
+void Vector< T >::deallocate()
+{
+  if (data_ != nullptr)
+  {
+    ::operator delete(data_);
+  }
+}
+
+template < class T >
+void Vector< T >::allocate(size_t new_capacity)
+{
+  if (new_capacity == 0)
+  {
+    data_ = nullptr;
+    return;
+  }
+  data_ = static_cast< T* >(::operator new(sizeof(T) * new_capacity));
+  capacity_ = new_capacity;
+}
+
+template < class T >
+void Vector< T >::shrinkToFit()
 {
   if (size_ == capacity_)
   {
@@ -223,7 +150,7 @@ void Vector<T>::shrinkToFit()
     capacity_ = 0;
     return;
   }
-  T* newData = static_cast<T*>(::operator new(sizeof(T) * size_));
+  T* newData = static_cast< T* >(::operator new(sizeof(T) * size_));
   for (size_t i = 0; i < size_; ++i)
   {
     new (newData + i) T(std::move(data_[i]));
@@ -234,39 +161,43 @@ void Vector<T>::shrinkToFit()
   capacity_ = size_;
 }
 
-template <class T>
-void Vector<T>::repeatPushBack(const T& val, size_t k)
-{
-  if (k == 0)
-  {
-    return;
-  }
-  reserve(size_ + k);
-  for (size_t i = 0; i < k; ++i)
-  {
-    new (data_ + size_ + i) T(val);
-  }
-  size_ += k;
-}
-
-template <class T>
-template <class IT>
-void Vector<T>::rangedPushBack(IT beg, size_t count)
+template < class T >
+template < class IT >
+void Vector< T >::rangedPushBack(IT beg, size_t count)
 {
   if (count == 0)
   {
     return;
   }
   reserve(size_ + count);
-  for (size_t i = 0; i < count; ++i, ++beg)
+  for (size_t i = 0; i < count; ++i)
   {
     new (data_ + size_ + i) T(*beg);
+    ++beg;
   }
   size_ += count;
 }
 
-template <class T>
-void Vector<T>::repeatInsert(size_t id, const T& val, size_t k)
+template < class T >
+void Vector< T >::reserve(size_t k)
+{
+  if (k <= capacity_)
+  {
+    return;
+  }
+  T* newData = static_cast< T* >(::operator new(sizeof(T) * k));
+  for (size_t i = 0; i < size_; ++i)
+  {
+    new (newData + i) T(std::move(data_[i]));
+    data_[i].~T();
+  }
+  deallocate();
+  data_ = newData;
+  capacity_ = k;
+}
+
+template < class T >
+void Vector< T >::repeatInsert(size_t id, const T& val, size_t k)
 {
   if (id > size_)
   {
@@ -276,7 +207,7 @@ void Vector<T>::repeatInsert(size_t id, const T& val, size_t k)
   {
     return;
   }
-  T* newData = static_cast<T*>(::operator new(sizeof(T) * (size_ + k)));
+  T* newData = static_cast< T* >(::operator new(sizeof(T) * (size_ + k)));
   for (size_t i = 0; i < id; ++i)
   {
     new (newData + i) T(std::move(data_[i]));
@@ -297,37 +228,123 @@ void Vector<T>::repeatInsert(size_t id, const T& val, size_t k)
   capacity_ = size_ + k;
 }
 
-template <class T>
-bool Vector<T>::operator==(const Vector<T>& rhs) const noexcept
+template < class T >
+Vector< T >::Vector(Vector< T >&& rhs) noexcept
+  : data_(rhs.data_),
+    size_(rhs.size_),
+    capacity_(rhs.capacity_)
 {
-  if (size_ != rhs.size_)
+  rhs.data_ = nullptr;
+  rhs.size_ = 0;
+  rhs.capacity_ = 0;
+}
+
+template < class T >
+void Vector< T >::repeatPushBack(const T& val, size_t k)
+{
+  if (k == 0)
   {
-    return false;
+    return;
   }
+  reserve(size_ + k);
+  for (size_t i = 0; i < k; ++i)
+  {
+    new (data_ + size_ + i) T(val);
+  }
+  size_ += k;
+}
+
+template < typename T >
+Vector< T >::Vector(std::initializer_list< T > il)
+  : data_(nullptr),
+    size_(0),
+    capacity_(0)
+{
+  reserve(il.size());
+  size_ = il.size();
+  size_t i = 0;
+  for (auto it = il.begin(); it != il.end(); ++it, ++i)
+  {
+    new (data_ + i) T(*it);
+  }
+}
+
+template < class T >
+void Vector< T >::pushFront(const T& val)
+{
+  insert(0, val);
+}
+
+template < class T >
+Vector< T >& Vector< T >::operator=(Vector< T >&& rhs) noexcept
+{
+  if (this != &rhs)
+  {
+    destroyRange(0, size_);
+    deallocate();
+    data_ = rhs.data_;
+    size_ = rhs.size_;
+    capacity_ = rhs.capacity_;
+    rhs.data_ = nullptr;
+    rhs.size_ = 0;
+    rhs.capacity_ = 0;
+  }
+  return *this;
+}
+
+template < class T >
+void Vector< T >::swap(Vector< T >& rhs) noexcept
+{
+  std::swap(data_, rhs.data_);
+  std::swap(size_, rhs.size_);
+  std::swap(capacity_, rhs.capacity_);
+}
+
+template < class T >
+Vector< T >& Vector< T >::operator=(const Vector< T >& rhs)
+{
+  if (this != &rhs)
+  {
+    Vector< T > cpy(rhs);
+    swap(cpy);
+  }
+  return *this;
+}
+
+template < class T >
+Vector< T >::Vector(const Vector< T >& rhs)
+  : data_(nullptr),
+    size_(0),
+    capacity_(0)
+{
+  reserve(rhs.size_);
+  size_ = rhs.size_;
   for (size_t i = 0; i < size_; ++i)
   {
-    if (data_[i] != rhs.data_[i])
-    {
-      return false;
-    }
+    new (data_ + i) T(rhs.data_[i]);
   }
-  return true;
 }
 
-template <class T>
-bool Vector<T>::operator!=(const Vector<T>& rhs) const noexcept
+template < class T >
+void Vector< T >::pushBack(const T& val)
 {
-  return !(*this == rhs);
+  if (size_ == capacity_)
+  {
+    size_t newCapacity = capacity_ == 0 ? 1 : capacity_ * 2;
+    reserve(newCapacity);
+  }
+  new (data_ + size_) T(val);
+  ++size_;
 }
 
-template <class T>
-void Vector<T>::insert(size_t pos, const T& val)
+template < class T >
+void Vector< T >::insert(size_t pos, const T& val)
 {
   if (pos > size_)
   {
     throw std::out_of_range("Vector::insert: position out of range");
   }
-  T* newData = static_cast<T*>(::operator new(sizeof(T) * (size_ + 1)));
+  T* newData = static_cast< T* >(::operator new(sizeof(T) * (size_ + 1)));
   for (size_t i = 0; i < pos; ++i)
   {
     new (newData + i) T(std::move(data_[i]));
@@ -345,8 +362,8 @@ void Vector<T>::insert(size_t pos, const T& val)
   capacity_ = size_;
 }
 
-template <class T>
-void Vector<T>::insert(size_t pos, const Vector<T>& rhs, size_t b, size_t e)
+template < class T >
+void Vector< T >::insert(size_t pos, const Vector< T >& rhs, size_t b, size_t e)
 {
   if (pos > size_)
   {
@@ -361,7 +378,7 @@ void Vector<T>::insert(size_t pos, const Vector<T>& rhs, size_t b, size_t e)
   {
     return;
   }
-  T* newData = static_cast<T*>(::operator new(sizeof(T) * (size_ + count)));
+  T* newData = static_cast< T* >(::operator new(sizeof(T) * (size_ + count)));
   for (size_t i = 0; i < pos; ++i)
   {
     new (newData + i) T(std::move(data_[i]));
@@ -382,8 +399,8 @@ void Vector<T>::insert(size_t pos, const Vector<T>& rhs, size_t b, size_t e)
   capacity_ = size_;
 }
 
-template <class T>
-void Vector<T>::erase(size_t pos)
+template < class T >
+void Vector< T >::erase(size_t pos)
 {
   if (pos >= size_)
   {
@@ -398,8 +415,8 @@ void Vector<T>::erase(size_t pos)
   --size_;
 }
 
-template <class T>
-struct Vector<T>::VectorIterator
+template < class T >
+struct Vector< T >::VectorIterator
 {
   using iterator_category = std::random_access_iterator_tag;
   using value_type = T;
@@ -407,10 +424,12 @@ struct Vector<T>::VectorIterator
   using pointer = T*;
   using reference = T&;
 
-  VectorIterator() : ptr_(nullptr)
+  VectorIterator()
+    : ptr_(nullptr)
   {
   }
-  explicit VectorIterator(pointer ptr) : ptr_(ptr)
+  explicit VectorIterator(pointer ptr)
+    : ptr_(ptr)
   {
   }
 
@@ -504,31 +523,32 @@ private:
   pointer ptr_;
 };
 
-template <class T>
-typename Vector<T>::iterator Vector<T>::begin()
+template < class T >
+typename Vector< T >::iterator Vector< T >::begin()
 {
   return iterator(data_);
 }
 
-template <class T>
-typename Vector<T>::iterator Vector<T>::end()
+template < class T >
+typename Vector< T >::iterator Vector< T >::end()
 {
   return iterator(data_ + size_);
 }
 
-template <class T>
-void Vector<T>::insert(iterator pos, const T& val)
+template < class T >
+void Vector< T >::insert(iterator pos, const T& val)
 {
-  insert(pos - begin(), val);
+  size_t index = pos - begin();
+  insert(index, val);
 }
 
-template <class T>
-template <class IT>
-void Vector<T>::insert(iterator pos, IT begin, IT end)
+template < class T >
+template < class IT >
+void Vector< T >::insert(iterator pos, IT beg, IT end)
 {
   size_t index = pos - this->begin();
   size_t count = 0;
-  for (IT it = begin; it != end; ++it)
+  for (IT it = beg; it != end; ++it)
   {
     ++count;
   }
@@ -536,14 +556,14 @@ void Vector<T>::insert(iterator pos, IT begin, IT end)
   {
     return;
   }
-  T* newData = static_cast<T*>(::operator new(sizeof(T) * (size_ + count)));
+  T* newData = static_cast< T* >(::operator new(sizeof(T) * (size_ + count)));
   for (size_t i = 0; i < index; ++i)
   {
     new (newData + i) T(std::move(data_[i]));
     data_[i].~T();
   }
   size_t j = 0;
-  for (IT it = begin; it != end; ++it, ++j)
+  for (IT it = beg; it != end; ++it, ++j)
   {
     new (newData + index + j) T(*it);
   }
@@ -558,14 +578,15 @@ void Vector<T>::insert(iterator pos, IT begin, IT end)
   capacity_ = size_;
 }
 
-template <class T>
-void Vector<T>::erase(iterator pos)
+template < class T >
+void Vector< T >::erase(iterator pos)
 {
-  erase(pos - begin());
+  size_t index = pos - begin();
+  erase(index);
 }
 
-template <class T>
-void Vector<T>::erase(iterator first, iterator last)
+template < class T >
+void Vector< T >::erase(iterator first, iterator last)
 {
   size_t first_idx = first - begin();
   size_t last_idx = last - begin();
@@ -595,8 +616,8 @@ void Vector<T>::erase(iterator first, iterator last)
   size_ -= count;
 }
 
-template <class T>
-void Vector<T>::eraseValue(const T& value)
+template < class T >
+void Vector< T >::eraseValue(const T& value)
 {
   for (size_t i = 0; i < size_;)
   {
@@ -611,68 +632,118 @@ void Vector<T>::eraseValue(const T& value)
   }
 }
 
-template <class T>
-size_t Vector<T>::getCapacity() const noexcept
+template < class T >
+size_t Vector< T >::getCapacity() const noexcept
 {
   return capacity_;
 }
 
-template <class T>
-bool Vector<T>::isEmpty() const noexcept
+template < class T >
+bool Vector< T >::operator==(const Vector< T >& rhs) const noexcept
+{
+  if (size_ != rhs.size_)
+  {
+    return false;
+  }
+  for (size_t i = 0; i < size_; ++i)
+  {
+    if (data_[i] != rhs.data_[i])
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+template < class T >
+T& Vector< T >::operator[](size_t id) noexcept
+{
+  return data_[id];
+}
+
+template < class T >
+const T& Vector< T >::operator[](size_t id) const noexcept
+{
+  return data_[id];
+}
+
+template < class T >
+bool Vector< T >::operator!=(const Vector< T >& rhs) const noexcept
+{
+  return !(*this == rhs);
+}
+
+template < class T >
+T& Vector< T >::at(size_t id)
+{
+  if (id >= size_)
+  {
+    throw std::out_of_range("Vector::at: index out of range");
+  }
+  return data_[id];
+}
+
+template < class T >
+const T& Vector< T >::at(size_t id) const
+{
+  if (id >= size_)
+  {
+    throw std::out_of_range("Vector::at: index out of range");
+  }
+  return data_[id];
+}
+
+template < class T >
+Vector< T >::Vector(size_t size, const T& val)
+  : data_(nullptr),
+    size_(size),
+    capacity_(size)
+{
+  if (size_ == 0)
+  {
+    return;
+  }
+  data_ = static_cast< T* >(::operator new(sizeof(T) * size_));
+  for (size_t i = 0; i < size_; ++i)
+  {
+    new (data_ + i) T(val);
+  }
+}
+
+template < class T >
+Vector< T >::Vector(size_t size)
+  : data_(nullptr),
+    size_(0),
+    capacity_(0)
+{
+  reserve(size);
+}
+
+template < class T >
+bool Vector< T >::isEmpty() const noexcept
 {
   return !size_;
 }
 
-template <class T>
-size_t Vector<T>::getSize() const noexcept
+template < class T >
+size_t Vector< T >::getSize() const noexcept
 {
   return size_;
 }
 
-template <class T>
-T& Vector<T>::operator[](size_t id) noexcept
+template < class T >
+Vector< T >::Vector()
+  : data_(nullptr),
+    size_(0),
+    capacity_(0)
 {
-  return data_[id];
 }
 
-template <class T>
-const T& Vector<T>::operator[](size_t id) const noexcept
+template < class T >
+Vector< T >::~Vector()
 {
-  return data_[id];
-}
-
-template <class T>
-T& Vector<T>::at(size_t id)
-{
-  if (id >= size_)
-  {
-    throw std::out_of_range("Vector::at: index out of range");
-  }
-  return data_[id];
-}
-
-template <class T>
-const T& Vector<T>::at(size_t id) const
-{
-  if (id >= size_)
-  {
-    throw std::out_of_range("Vector::at: index out of range");
-  }
-  return data_[id];
-}
-
-template <class T>
-void Vector<T>::pushFront(const T& val)
-{
-  insert(0, val);
-}
-
-template <class T>
-void Vector<T>::swap(Vector<T>& rhs) noexcept
-{
-  std::swap(data_, rhs.data_);
-  std::swap(size_, rhs.size_);
-  std::swap(capacity_, rhs.capacity_);
+  destroyRange(0, size_);
+  deallocate();
 }
 
 struct Blake2Hash
@@ -681,7 +752,6 @@ struct Blake2Hash
   {
     return hash_bytes(s.data(), s.size());
   }
-
   std::size_t hash_bytes(const char* data, std::size_t len) const
   {
     boost::hash2::blake2b_512 hasher;
@@ -693,13 +763,13 @@ struct Blake2Hash
   }
 };
 
-template <typename Key, typename Value,
+template < typename Key, typename Value,
           typename Hash = Blake2Hash,
-          typename Equal = std::equal_to<Key>>
+          typename Equal = std::equal_to< Key > >
 class BucketHashTable
 {
 public:
-  using value_type = std::pair<Key, Value>;
+  using value_type = std::pair< Key, Value >;
 
 private:
   struct Slot
@@ -774,7 +844,8 @@ private:
       {
         break;
       }
-      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE) && equal_(s.data.first, key))
+      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE)
+          && equal_(s.data.first, key))
       {
         return &s;
       }
@@ -792,7 +863,8 @@ private:
       {
         break;
       }
-      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE) && equal_(s.data.first, key))
+      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE)
+          && equal_(s.data.first, key))
       {
         return &s;
       }
@@ -822,7 +894,8 @@ private:
       {
         break;
       }
-      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE) && equal_(s.data.first, key))
+      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE)
+          && equal_(s.data.first, key))
       {
         return &s;
       }
@@ -839,7 +912,8 @@ private:
       {
         break;
       }
-      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE) && equal_(s.data.first, key))
+      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE)
+          && equal_(s.data.first, key))
       {
         return &s;
       }
@@ -860,6 +934,68 @@ private:
   }
 
 public:
+  BucketHashTable(std::size_t bucket_count = 16,
+                  std::size_t bucket_size = 4,
+                  std::size_t overflow_size = 16,
+                  Hash h = Hash(), Equal e = Equal())
+    : slots_(nullptr), bucket_count_(bucket_count ? bucket_count : 1),
+      bucket_size_(bucket_size ? bucket_size : 1),
+      total_slots_(bucket_count_ * bucket_size_ + (overflow_size ? overflow_size : 1)),
+      overflow_start_(bucket_count_ * bucket_size_),
+      overflow_size_(overflow_size ? overflow_size : 1),
+      size_(0), hasher_(h), equal_(e)
+  {
+    slots_ = static_cast< Slot* >(::operator new(sizeof(Slot) * total_slots_));
+    for (std::size_t i = 0; i < total_slots_; ++i)
+    {
+      new (slots_ + i) Slot();
+    }
+  }
+
+  ~BucketHashTable()
+  {
+    if (slots_)
+    {
+      for (std::size_t i = 0; i < total_slots_; ++i)
+      {
+        slots_[i].~Slot();
+      }
+      ::operator delete(slots_);
+    }
+  }
+
+  BucketHashTable(const BucketHashTable& other)
+    : bucket_count_(other.bucket_count_), bucket_size_(other.bucket_size_),
+      total_slots_(other.total_slots_), overflow_start_(other.overflow_start_),
+      overflow_size_(other.overflow_size_), size_(other.size_),
+      hasher_(other.hasher_), equal_(other.equal_)
+  {
+    slots_ = static_cast< Slot* >(::operator new(sizeof(Slot) * total_slots_));
+    for (std::size_t i = 0; i < total_slots_; ++i)
+    {
+      new (slots_ + i) Slot(other.slots_[i]);
+    }
+  }
+
+  void swap(BucketHashTable& other) noexcept
+  {
+    std::swap(slots_, other.slots_);
+    std::swap(bucket_count_, other.bucket_count_);
+    std::swap(bucket_size_, other.bucket_size_);
+    std::swap(total_slots_, other.total_slots_);
+    std::swap(overflow_start_, other.overflow_start_);
+    std::swap(overflow_size_, other.overflow_size_);
+    std::swap(size_, other.size_);
+    std::swap(hasher_, other.hasher_);
+    std::swap(equal_, other.equal_);
+  }
+
+  BucketHashTable& operator=(BucketHashTable other)
+  {
+    swap(other);
+    return *this;
+  }
+
   class iterator
   {
     friend class BucketHashTable;
@@ -922,68 +1058,6 @@ public:
   iterator end()   { return iterator(slots_ + total_slots_, slots_ + total_slots_); }
   const_iterator begin() const { return const_iterator(slots_, slots_ + total_slots_); }
   const_iterator end()   const { return const_iterator(slots_ + total_slots_, slots_ + total_slots_); }
-
-  BucketHashTable(std::size_t bucket_count = 16,
-                  std::size_t bucket_size = 4,
-                  std::size_t overflow_size = 16,
-                  Hash h = Hash(), Equal e = Equal())
-    : slots_(nullptr), bucket_count_(bucket_count ? bucket_count : 1),
-      bucket_size_(bucket_size ? bucket_size : 1),
-      total_slots_(bucket_count_ * bucket_size_ + (overflow_size ? overflow_size : 1)),
-      overflow_start_(bucket_count_ * bucket_size_),
-      overflow_size_(overflow_size ? overflow_size : 1),
-      size_(0), hasher_(h), equal_(e)
-  {
-    slots_ = static_cast<Slot*>(::operator new(sizeof(Slot) * total_slots_));
-    for (std::size_t i = 0; i < total_slots_; ++i)
-    {
-      new (slots_ + i) Slot();
-    }
-  }
-
-  ~BucketHashTable()
-  {
-    if (slots_)
-    {
-      for (std::size_t i = 0; i < total_slots_; ++i)
-      {
-        slots_[i].~Slot();
-      }
-      ::operator delete(slots_);
-    }
-  }
-
-  BucketHashTable(const BucketHashTable& other)
-    : bucket_count_(other.bucket_count_), bucket_size_(other.bucket_size_),
-      total_slots_(other.total_slots_), overflow_start_(other.overflow_start_),
-      overflow_size_(other.overflow_size_), size_(other.size_),
-      hasher_(other.hasher_), equal_(other.equal_)
-  {
-    slots_ = static_cast<Slot*>(::operator new(sizeof(Slot) * total_slots_));
-    for (std::size_t i = 0; i < total_slots_; ++i)
-    {
-      new (slots_ + i) Slot(other.slots_[i]);
-    }
-  }
-
-  void swap(BucketHashTable& other) noexcept
-  {
-    std::swap(slots_, other.slots_);
-    std::swap(bucket_count_, other.bucket_count_);
-    std::swap(bucket_size_, other.bucket_size_);
-    std::swap(total_slots_, other.total_slots_);
-    std::swap(overflow_start_, other.overflow_start_);
-    std::swap(overflow_size_, other.overflow_size_);
-    std::swap(size_, other.size_);
-    std::swap(hasher_, other.hasher_);
-    std::swap(equal_, other.equal_);
-  }
-
-  BucketHashTable& operator=(BucketHashTable other)
-  {
-    swap(other);
-    return *this;
-  }
 
   bool has(const Key& key) const
   {
