@@ -56,7 +56,7 @@ public:
   }
 };
 
-inline GraphCollection readGraphs(const std::string& filename)
+GraphCollection readGraphs(const std::string& filename)
 {
   std::ifstream file(filename);
   if (!file.is_open())
