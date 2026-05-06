@@ -44,6 +44,21 @@ struct Vector
   void insert(size_t pos, const T& val);
   void insert(size_t pos, const Vector<T>& rhs, size_t b, size_t e);
   void erase(size_t pos);
+
+  struct VectorIterator;
+  using iterator = VectorIterator;
+
+  iterator begin();
+  iterator end();
+
+  void insert(iterator pos, const T& val);
+  void erase(iterator pos);
+
+  template <class IT>
+  void insert(iterator pos, IT begin, IT end);
+
+  void erase(iterator first, iterator last);
+  void eraseValue(const T& value);
 };
 
 }
