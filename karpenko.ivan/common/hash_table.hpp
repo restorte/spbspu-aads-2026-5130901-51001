@@ -695,4 +695,64 @@ struct Blake2Hash
   }
 };
 
+template <typename Key, typename Value,
+          typename Hash = Blake2Hash,
+          typename Equal = std::equal_to<Key>>
+class BucketHashTable
+{
+public:
+  using value_type = std::pair<Key, Value>;
+
+private:
+  struct Slot
+  {
+    enum State { EMPTY, OCCUPIED, TOMBSTONE };
+    value_type data;
+    State state;
+    Slot() : state(EMPTY) {}
+  };
+
+  Slot* slots_;
+  std::size_t bucket_count_;
+  std::size_t bucket_size_;
+  std::size_t total_slots_;
+  std::size_t overflow_start_;
+  std::size_t overflow_size_;
+  std::size_t size_;
+  Hash hasher_;
+  Equal equal_;
+
+public:
+  BucketHashTable(std::size_t bucket_count = 16,
+                  std::size_t bucket_size = 4,
+                  std::size_t overflow_size = 16,
+                  Hash h = Hash(), Equal e = Equal())
+    : slots_(nullptr), bucket_count_(bucket_count ? bucket_count : 1),
+      bucket_size_(bucket_size ? bucket_size : 1),
+      total_slots_(bucket_count_ * bucket_size_ + (overflow_size ? overflow_size : 1)),
+      overflow_start_(bucket_count_ * bucket_size_),
+      overflow_size_(overflow_size ? overflow_size : 1),
+      size_(0), hasher_(h), equal_(e)
+  {
+    slots_ = static_cast<Slot*>(::operator new(sizeof(Slot) * total_slots_));
+    for (std::size_t i = 0; i < total_slots_; ++i)
+    {
+      new (slots_ + i) Slot();
+    }
+  }
+
+  ~BucketHashTable()
+  {
+    if (slots_)
+    {
+      for (std::size_t i = 0; i < total_slots_; ++i)
+      {
+        slots_[i].~Slot();
+      }
+      ::operator delete(slots_);
+    }
+  }
+};
+
+
 #endif
