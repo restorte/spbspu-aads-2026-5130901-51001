@@ -675,8 +675,6 @@ void Vector<T>::swap(Vector<T>& rhs) noexcept
   std::swap(capacity_, rhs.capacity_);
 }
 
-}
-
 struct Blake2Hash
 {
   std::size_t operator()(const std::string& s) const
@@ -722,6 +720,145 @@ private:
   Hash hasher_;
   Equal equal_;
 
+  std::size_t home_bucket(const Key& k) const
+  {
+    return hasher_(k) % bucket_count_;
+  }
+
+  std::size_t bucket_offset(std::size_t bucket) const
+  {
+    return bucket * bucket_size_;
+  }
+
+  Slot* find_slot_any(const Key& key)
+  {
+    std::size_t b = home_bucket(key);
+    Slot* s = find_in_bucket(key, b);
+    if (s)
+    {
+      return s;
+    }
+    return find_in_overflow(key);
+  }
+
+  const Slot* find_slot_any(const Key& key) const
+  {
+    std::size_t b = home_bucket(key);
+    const Slot* s = find_in_bucket(key, b);
+    if (s)
+    {
+      return s;
+    }
+    return find_in_overflow(key);
+  }
+
+  Slot* find_slot(const Key& key)
+  {
+    Slot* s = find_slot_any(key);
+    return (s && s->state == Slot::OCCUPIED) ? s : nullptr;
+  }
+
+  const Slot* find_slot(const Key& key) const
+  {
+    const Slot* s = find_slot_any(key);
+    return (s && s->state == Slot::OCCUPIED) ? s : nullptr;
+  }
+
+  Slot* find_in_bucket(const Key& key, std::size_t bucket)
+  {
+    std::size_t start = bucket_offset(bucket);
+    for (std::size_t i = 0; i < bucket_size_; ++i)
+    {
+      Slot& s = slots_[start + i];
+      if (s.state == Slot::EMPTY)
+      {
+        break;
+      }
+      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE) && equal_(s.data.first, key))
+      {
+        return &s;
+      }
+    }
+    return nullptr;
+  }
+
+  const Slot* find_in_bucket(const Key& key, std::size_t bucket) const
+  {
+    std::size_t start = bucket_offset(bucket);
+    for (std::size_t i = 0; i < bucket_size_; ++i)
+    {
+      const Slot& s = slots_[start + i];
+      if (s.state == Slot::EMPTY)
+      {
+        break;
+      }
+      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE) && equal_(s.data.first, key))
+      {
+        return &s;
+      }
+    }
+    return nullptr;
+  }
+
+  Slot* find_empty_in_bucket(std::size_t bucket)
+  {
+    std::size_t start = bucket_offset(bucket);
+    for (std::size_t i = 0; i < bucket_size_; ++i)
+    {
+      if (slots_[start + i].state == Slot::EMPTY)
+      {
+        return &slots_[start + i];
+      }
+    }
+    return nullptr;
+  }
+
+  Slot* find_in_overflow(const Key& key)
+  {
+    for (std::size_t i = 0; i < overflow_size_; ++i)
+    {
+      Slot& s = slots_[overflow_start_ + i];
+      if (s.state == Slot::EMPTY)
+      {
+        break;
+      }
+      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE) && equal_(s.data.first, key))
+      {
+        return &s;
+      }
+    }
+    return nullptr;
+  }
+
+  const Slot* find_in_overflow(const Key& key) const
+  {
+    for (std::size_t i = 0; i < overflow_size_; ++i)
+    {
+      const Slot& s = slots_[overflow_start_ + i];
+      if (s.state == Slot::EMPTY)
+      {
+        break;
+      }
+      if ((s.state == Slot::OCCUPIED || s.state == Slot::TOMBSTONE) && equal_(s.data.first, key))
+      {
+        return &s;
+      }
+    }
+    return nullptr;
+  }
+
+  Slot* find_empty_in_overflow()
+  {
+    for (std::size_t i = 0; i < overflow_size_; ++i)
+    {
+      if (slots_[overflow_start_ + i].state == Slot::EMPTY)
+      {
+        return &slots_[overflow_start_ + i];
+      }
+    }
+    return nullptr;
+  }
+
 public:
   BucketHashTable(std::size_t bucket_count = 16,
                   std::size_t bucket_size = 4,
@@ -754,5 +891,6 @@ public:
   }
 };
 
+}
 
 #endif
