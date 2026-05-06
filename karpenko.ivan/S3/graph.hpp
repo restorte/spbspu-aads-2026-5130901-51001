@@ -49,7 +49,7 @@ bool removeWeightFromMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& 
 void printEdges(std::ostream& out, const std::string& vertex, const OuterEdgeMap& edges);
 void printSortedVertices(std::ostream& out, const Graph& g);
 
-inline void addEdgeToMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
+void addEdgeToMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
 {
     auto it = edges.find(from);
     if (it == edges.end())
@@ -77,7 +77,7 @@ inline void addEdgeToMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& 
     }
 }
 
-inline bool removeWeightFromMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
+bool removeWeightFromMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
 {
     auto it = edges.find(from);
     if (it == edges.end())
@@ -106,7 +106,7 @@ inline bool removeWeightFromMap(OuterEdgeMap& edges, const Vertex& from, const V
     return false;
 }
 
-inline void printEdges(std::ostream& out, const std::string& vertex, const OuterEdgeMap& edges)
+void printEdges(std::ostream& out, const std::string& vertex, const OuterEdgeMap& edges)
 {
     auto it = edges.find(vertex);
     if (it == edges.end())
@@ -120,6 +120,11 @@ inline void printEdges(std::ostream& out, const std::string& vertex, const Outer
         targets.pushBack(ti->first);
     }
     std::sort(targets.begin(), targets.end());
+    if (targets.getSize() == 0)
+    {
+        out << '\n';
+        return;
+    }
     for (std::size_t t = 0; t < targets.getSize(); ++t)
     {
         const std::string& target = targets[t];
@@ -135,7 +140,7 @@ inline void printEdges(std::ostream& out, const std::string& vertex, const Outer
     }
 }
 
-inline bool hasWeightInMap(const OuterEdgeMap& edges,
+bool hasWeightInMap(const OuterEdgeMap& edges,
                            const Vertex& from, const Vertex& to,
                            Weight w)
 {
@@ -161,7 +166,7 @@ inline bool hasWeightInMap(const OuterEdgeMap& edges,
     return false;
 }
 
-inline void printSortedVertices(std::ostream& out, const Graph& g)
+void printSortedVertices(std::ostream& out, const Graph& g)
 {
     Vector< std::string > verts;
     for (auto it = g.vertices_.begin(); it != g.vertices_.end(); ++it)
@@ -169,6 +174,11 @@ inline void printSortedVertices(std::ostream& out, const Graph& g)
         verts.pushBack(it->first);
     }
     std::sort(verts.begin(), verts.end());
+    if (verts.getSize() == 0)
+    {
+        out << '\n';
+        return;
+    }
     for (std::size_t i = 0; i < verts.getSize(); ++i)
     {
         out << verts[i] << '\n';

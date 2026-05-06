@@ -27,6 +27,10 @@ void handleGraphs(std::istream&, std::ostream& out, GraphCollection& gc)
   {
     out << names[i] << '\n';
   }
+  if (names.getSize() == 0)
+  {
+    out << '\n';
+  }
 }
 
 void handleVertexes(std::istream& in, std::ostream& out, GraphCollection& gc)
