@@ -3,10 +3,13 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
 #include <initializer_list>
 #include <stdexcept>
 #include <string>
 #include <utility>
+
+#include <boost/hash2/blake2.hpp>
 
 namespace karpenko
 {
@@ -673,5 +676,23 @@ void Vector<T>::swap(Vector<T>& rhs) noexcept
 }
 
 }
+
+struct Blake2Hash
+{
+  std::size_t operator()(const std::string& s) const
+  {
+    return hash_bytes(s.data(), s.size());
+  }
+
+  std::size_t hash_bytes(const char* data, std::size_t len) const
+  {
+    boost::hash2::blake2b_512 hasher;
+    hasher.update(data, len);
+    auto digest = hasher.result();
+    std::size_t result = 0;
+    std::memcpy(&result, digest.data(), std::min(sizeof(result), digest.size()));
+    return result;
+  }
+};
 
 #endif
