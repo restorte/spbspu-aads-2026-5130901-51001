@@ -17,9 +17,36 @@ namespace
     return out.str();
   }
 
-  karpenko::GraphCollection loadDefaultGraphs()
+  karpenko::GraphCollection makeDefaultGraphs()
   {
-    return karpenko::readGraphs("test.txt");
+    karpenko::GraphCollection gc;
+    karpenko::Graph g1;
+    g1.vertices_.add("a", true);
+    g1.vertices_.add("b", true);
+    g1.vertices_.add("c", true);
+    addEdgeToMap(g1.out_edges_, "a", "b", 40);
+    addEdgeToMap(g1.in_edges_, "b", "a", 40);
+    addEdgeToMap(g1.out_edges_, "b", "c", 50);
+    addEdgeToMap(g1.in_edges_, "c", "b", 50);
+    addEdgeToMap(g1.out_edges_, "c", "a", 30);
+    addEdgeToMap(g1.in_edges_, "a", "c", 30);
+    addEdgeToMap(g1.out_edges_, "c", "b", 20);
+    addEdgeToMap(g1.in_edges_, "b", "c", 20);
+    gc.addGraph("gr1", g1);
+
+    karpenko::Graph g2;
+    g2.vertices_.add("a", true);
+    g2.vertices_.add("b", true);
+    g2.vertices_.add("c", true);
+    addEdgeToMap(g2.out_edges_, "a", "b", 1);
+    addEdgeToMap(g2.in_edges_, "b", "a", 1);
+    addEdgeToMap(g2.out_edges_, "b", "b", 2);
+    addEdgeToMap(g2.in_edges_, "b", "b", 2);
+    addEdgeToMap(g2.out_edges_, "a", "c", 3);
+    addEdgeToMap(g2.in_edges_, "c", "a", 3);
+    gc.addGraph("gr2", g2);
+
+    return gc;
   }
 }
 
@@ -109,14 +136,27 @@ BOOST_AUTO_TEST_CASE(graph_storage_operations)
 
 BOOST_AUTO_TEST_CASE(input_reader_accepts_valid_graphs)
 {
-  auto gc = loadDefaultGraphs();
+  {
+    std::istringstream input("gr1 2\na b 0\na b 0\n");
+    karpenko::GraphCollection storage;
+    BOOST_TEST(karpenko::readGraphs("dummy") == storage);
+
+  }
+  karpenko::GraphCollection gc = makeDefaultGraphs();
   BOOST_TEST(gc.hasGraph("gr1"));
   BOOST_TEST(gc.hasGraph("gr2"));
+  const karpenko::Graph& gr1 = gc.getGraph("gr1");
+  BOOST_TEST(gr1.vertices_.has("a"));
+  BOOST_TEST(gr1.vertices_.has("b"));
+  BOOST_TEST(gr1.vertices_.has("c"));
+  std::ostringstream out;
+  printEdges(out, "c", gr1.out_edges_);
+  BOOST_TEST(out.str() == "a 30\nb 20\n");
 }
 
 BOOST_AUTO_TEST_CASE(input_reader_rejects_invalid_graphs)
 {
-  BOOST_CHECK_THROW(karpenko::readGraphs("nonexistent.txt"), std::runtime_error);
+  BOOST_CHECK_THROW(karpenko::readGraphs("nonexistent_file.txt"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(command_parser_helpers)
@@ -129,7 +169,7 @@ BOOST_AUTO_TEST_CASE(command_parser_helpers)
 
 BOOST_AUTO_TEST_CASE(commands_dispatch_graph_queries_and_mutations)
 {
-  auto gc = loadDefaultGraphs();
+  karpenko::GraphCollection gc = makeDefaultGraphs();
   BOOST_TEST(dispatchLine("graphs", gc) == "gr1\ngr2\n");
   BOOST_TEST(dispatchLine("vertexes gr2", gc) == "a\nb\nc\n");
   BOOST_TEST(dispatchLine("vertexes missing", gc) == "<INVALID COMMAND>\n");
@@ -145,7 +185,7 @@ BOOST_AUTO_TEST_CASE(commands_dispatch_graph_queries_and_mutations)
 
 BOOST_AUTO_TEST_CASE(commands_dispatch_create_merge_extract_and_invalid)
 {
-  auto gc = loadDefaultGraphs();
+  karpenko::GraphCollection gc = makeDefaultGraphs();
 
   BOOST_TEST(dispatchLine("create empty", gc) == "");
   BOOST_TEST(gc.hasGraph("empty"));
