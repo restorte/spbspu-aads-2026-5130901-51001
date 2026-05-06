@@ -1145,6 +1145,7 @@ public:
       throw std::runtime_error("Hash table overflow");
     }
 
+    dest->data.~value_type();
     new (&dest->data) value_type(key, val);
     dest->state = Slot::OCCUPIED;
     ++size_;
@@ -1155,7 +1156,6 @@ public:
     Slot* s = find_slot_any(key);
     if (s && s->state == Slot::OCCUPIED)
     {
-      s->data.~value_type();
       s->state = Slot::TOMBSTONE;
       --size_;
       return true;
