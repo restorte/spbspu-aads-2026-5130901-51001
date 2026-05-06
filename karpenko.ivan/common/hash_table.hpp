@@ -27,6 +27,12 @@ struct Vector
   Vector(const Vector<T>&);
   Vector<T>& operator=(const Vector<T>&);
   bool isEmpty() const noexcept;
+  size_t getSize() const noexcept;
+  size_t getCapacity() const noexcept;
+  void pushBack(const T& val);
+
+  void reserve(size_t k);
+  void shrinkToFit();
 };
 
 }
