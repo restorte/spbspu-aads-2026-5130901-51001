@@ -14,7 +14,9 @@ int main(int argc, char* argv[])
     karpenko::CommandSystem cs;
     std::string line;
     while (std::getline(std::cin, line))
+    {
       cs.execute(line, std::cout, graphs);
+    }
   }
   catch (const std::exception& e)
   {

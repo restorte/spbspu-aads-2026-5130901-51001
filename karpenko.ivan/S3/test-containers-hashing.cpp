@@ -7,13 +7,16 @@
 
 namespace
 {
-  using HashTable = karpenko::BucketHashTable<std::string, int, karpenko::Blake2Hash, std::equal_to<std::string>>;
+  using HashTable = karpenko::BucketHashTable < std::string, int, karpenko::Blake2Hash, std::equal_to < std::string > >;
 
   struct ConstantHash
   {
-    std::size_t operator()(const std::string&) const { return 0; }
+    std::size_t operator()(const std::string&) const
+    {
+      return 0;
+    }
   };
-  using CollisionTable = karpenko::BucketHashTable<std::string, int, ConstantHash, std::equal_to<std::string>>;
+  using CollisionTable = karpenko::BucketHashTable < std::string, int, ConstantHash, std::equal_to < std::string > >;
 }
 
 BOOST_AUTO_TEST_CASE(blake2_hash_is_stable_and_distinguishes_keys)

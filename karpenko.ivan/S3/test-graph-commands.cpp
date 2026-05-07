@@ -126,17 +126,23 @@ BOOST_AUTO_TEST_CASE(graph_storage_operations)
   gc.addGraph("a", g);
 
   std::ostringstream oss;
-  karpenko::List<std::string> names;
+  karpenko::List < std::string > names;
   for (auto it = gc.getMap().begin(); it != gc.getMap().end(); ++it)
+  {
     names.push_back(it->first);
+  }
   std::size_t n = names.size();
   std::string* arr = new std::string[n];
   std::size_t i = 0;
   for (auto it = names.begin(); it != names.end(); ++it, ++i)
+  {
     arr[i] = *it;
+  }
   std::sort(arr, arr + n);
   for (i = 0; i < n; ++i)
+  {
     oss << arr[i] << '\n';
+  }
   delete[] arr;
   BOOST_TEST(oss.str() == "a\nb\n");
 }
