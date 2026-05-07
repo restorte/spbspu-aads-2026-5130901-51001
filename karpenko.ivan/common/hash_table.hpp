@@ -230,7 +230,6 @@ public:
   }
 
   BucketHashTable& operator=(BucketHashTable other) { swap(other); return *this; }
-  BucketHashTable& operator=(BucketHashTable&& other) noexcept { if (this != &other) swap(other); return *this; }
 
   class iterator
   {

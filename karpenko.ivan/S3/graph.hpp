@@ -6,7 +6,7 @@
 #include <string>
 
 #include "hash_table.hpp"
-#include "../common/list.hpp"
+#include "list.hpp"
 
 namespace karpenko
 {
@@ -46,8 +46,9 @@ void printEdges(std::ostream& out, const std::string& vertex, const OuterEdgeMap
 void printSortedVertices(std::ostream& out, const Graph& g);
 bool hasWeightInMap(const OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w);
 
+// ── реализация ──
 
-void addEdgeToMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
+inline void addEdgeToMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
 {
   auto it = edges.find(from);
   if (it == edges.end())
@@ -75,7 +76,7 @@ void addEdgeToMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Wei
   }
 }
 
-bool removeWeightFromMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
+inline bool removeWeightFromMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
 {
   auto it = edges.find(from);
   if (it == edges.end()) return false;
@@ -83,18 +84,36 @@ bool removeWeightFromMap(OuterEdgeMap& edges, const Vertex& from, const Vertex& 
   auto to_it = inner.find(to);
   if (to_it == inner.end()) return false;
   List<Weight>& weights = to_it->second.weights;
-  for (auto wi = weights.begin(); wi != weights.end(); ++wi)
+
+  // Ищем вес w и удаляем его (корректно работаем с циклическим списком)
+  for (auto cur = weights.begin(); cur != weights.end(); ++cur)
   {
-    if (*wi == w)
+    if (*cur == w)
     {
-      weights.erase_after(wi);
-      if (weights.empty()) inner.remove(to);
-      return true;
+      // Запоминаем адрес удаляемого узла
+      detail::NodeBase* target = cur.get_ptr();
+      // Находим предыдущий узел
+      detail::NodeBase* prev = weights.end().get_ptr(); // фиктивный head_
+      auto scan = weights.begin();
+      while (scan != weights.end() && scan.get_ptr() != target)
+      {
+        prev = scan.get_ptr();
+        ++scan;
+      }
+      if (scan != weights.end())
+      {
+        // Удаляем узел после prev
+        weights.erase_after(LIter<Weight>(prev));
+        if (weights.empty())
+          inner.remove(to);
+        return true;
+      }
     }
   }
   return false;
 }
 
+// Вспомогательная функция: копировать список в массив, сортировать и вывести
 namespace detail
 {
   template<typename T>
@@ -111,7 +130,7 @@ namespace detail
   }
 }
 
-void printEdges(std::ostream& out, const std::string& vertex, const OuterEdgeMap& edges)
+inline void printEdges(std::ostream& out, const std::string& vertex, const OuterEdgeMap& edges)
 {
   auto it = edges.find(vertex);
   if (it == edges.end())
@@ -144,7 +163,7 @@ void printEdges(std::ostream& out, const std::string& vertex, const OuterEdgeMap
   if (n == 0) out << '\n';
 }
 
-void printSortedVertices(std::ostream& out, const Graph& g)
+inline void printSortedVertices(std::ostream& out, const Graph& g)
 {
   List<std::string> vertList;
   for (auto it = g.vertices_.begin(); it != g.vertices_.end(); ++it)
@@ -160,7 +179,7 @@ void printSortedVertices(std::ostream& out, const Graph& g)
   ::operator delete(verts);
 }
 
-bool hasWeightInMap(const OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
+inline bool hasWeightInMap(const OuterEdgeMap& edges, const Vertex& from, const Vertex& to, Weight w)
 {
   auto it = edges.find(from);
   if (it == edges.end()) return false;
@@ -173,6 +192,6 @@ bool hasWeightInMap(const OuterEdgeMap& edges, const Vertex& from, const Vertex&
   return false;
 }
 
-}
+} // namespace karpenko
 
 #endif

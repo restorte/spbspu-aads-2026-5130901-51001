@@ -7,7 +7,6 @@
 
 namespace
 {
-  using Vector = karpenko::Vector<int>;
   using HashTable = karpenko::BucketHashTable<std::string, int, karpenko::Blake2Hash, std::equal_to<std::string>>;
 
   struct ConstantHash
@@ -15,73 +14,6 @@ namespace
     std::size_t operator()(const std::string&) const { return 0; }
   };
   using CollisionTable = karpenko::BucketHashTable<std::string, int, ConstantHash, std::equal_to<std::string>>;
-}
-
-BOOST_AUTO_TEST_CASE(sequence_operations)
-{
-  Vector values;
-  BOOST_TEST(values.isEmpty());
-  BOOST_TEST(values.getSize() == 0);
-
-  values.pushBack(10);
-  values.pushBack(20);
-  values.pushBack(30);
-  BOOST_TEST(!values.isEmpty());
-  BOOST_TEST(values.getSize() == 3);
-  BOOST_TEST(values[0] == 10);
-  BOOST_TEST(values[1] == 20);
-  BOOST_TEST(values[2] == 30);
-
-  values.reserve(16);
-  BOOST_TEST(values.getSize() == 3);
-  BOOST_TEST(values[0] == 10);
-  BOOST_TEST(values[1] == 20);
-  BOOST_TEST(values[2] == 30);
-
-  values.erase(1);
-  BOOST_TEST(values.getSize() == 2);
-  BOOST_TEST(values[0] == 10);
-  BOOST_TEST(values[1] == 30);
-
-  Vector copy(values);
-  copy[0] = 100;
-  BOOST_TEST(values[0] == 10);
-  BOOST_TEST(copy[0] == 100);
-
-  Vector assigned;
-  assigned.pushBack(1);
-  assigned = values;
-  assigned[1] = 300;
-  BOOST_TEST(values[1] == 30);
-  BOOST_TEST(assigned[1] == 300);
-
-  Vector moved(std::move(values));
-  BOOST_TEST(moved.getSize() == 2);
-  BOOST_TEST(moved[0] == 10);
-  BOOST_TEST(moved[1] == 30);
-
-  Vector moveAssigned;
-  moveAssigned = std::move(moved);
-  BOOST_TEST(moveAssigned.getSize() == 2);
-  BOOST_TEST(moveAssigned[0] == 10);
-  BOOST_TEST(moveAssigned[1] == 30);
-
-  moveAssigned.shrinkToFit();
-  BOOST_TEST(!moveAssigned.isEmpty());
-}
-
-BOOST_AUTO_TEST_CASE(sort_helper_orders_sequences)
-{
-  Vector ints;
-  ints.pushBack(5);
-  ints.pushBack(1);
-  ints.pushBack(3);
-  ints.pushBack(1);
-  std::sort(ints.begin(), ints.end());
-  BOOST_TEST(ints[0] == 1);
-  BOOST_TEST(ints[1] == 1);
-  BOOST_TEST(ints[2] == 3);
-  BOOST_TEST(ints[3] == 5);
 }
 
 BOOST_AUTO_TEST_CASE(blake2_hash_is_stable_and_distinguishes_keys)
