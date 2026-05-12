@@ -4,14 +4,14 @@
 #include <string>
 #include "../common/bstree.hpp"
 
-namespace karpenko {
+namespace karpenko
+{
 
-template<class Tree>
+template < class Tree >
 std::string keys(const Tree& tree)
 {
   std::string result;
-  for (auto it = tree.begin(); it != tree.end(); ++it)
-  {
+  for (auto it = tree.begin(); it != tree.end(); ++it) {
     result += std::to_string(it->first);
   }
   return result;
@@ -21,14 +21,14 @@ std::string keys(const Tree& tree)
 
 BOOST_AUTO_TEST_CASE(empty_tree)
 {
-  const karpenko::BSTree<int, std::string> tree;
+  const karpenko::BSTree< int, std::string > tree;
   BOOST_TEST((tree.begin() == tree.end()));
   BOOST_TEST(tree.height() == 0);
 }
 
 BOOST_AUTO_TEST_CASE(insert_search_and_iterators)
 {
-  karpenko::BSTree<int, std::string> tree;
+  karpenko::BSTree< int, std::string > tree;
   tree.push(2, "two");
   BOOST_TEST(tree.get(2) == "two");
   tree.push(1, "one");
@@ -59,17 +59,17 @@ BOOST_AUTO_TEST_CASE(insert_search_and_iterators)
 
 BOOST_AUTO_TEST_CASE(move_semantics)
 {
-  karpenko::BSTree<int, std::string> tree;
+  karpenko::BSTree< int, std::string > tree;
   tree.push(2, "two");
   tree.push(1, "one");
   tree.push(3, "three");
 
-  karpenko::BSTree<int, std::string> moved(std::move(tree));
+  karpenko::BSTree< int, std::string > moved(std::move(tree));
   BOOST_TEST((tree.begin() == tree.end()));
   BOOST_TEST(moved.begin() != moved.end());
   BOOST_TEST(karpenko::keys(moved) == "123");
 
-  karpenko::BSTree<int, std::string> assigned;
+  karpenko::BSTree< int, std::string > assigned;
   assigned = std::move(moved);
   BOOST_TEST((moved.begin() == moved.end()));
   BOOST_TEST(karpenko::keys(assigned) == "123");
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(move_semantics)
 
 BOOST_AUTO_TEST_CASE(drop_and_height)
 {
-  karpenko::BSTree<int, std::string> tree;
+  karpenko::BSTree< int, std::string > tree;
   tree.push(4, "four");
   tree.push(2, "two");
   tree.push(6, "six");
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(drop_and_height)
   tree.drop(4);
   BOOST_TEST(karpenko::keys(tree) == "13");
 
-  karpenko::BSTree<int, std::string> single;
+  karpenko::BSTree< int, std::string > single;
   single.push(10, "ten");
   BOOST_TEST(single.height() == 1);
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(drop_and_height)
 BOOST_AUTO_TEST_CASE(rotations)
 {
   {
-    karpenko::BSTree<int, std::string> t;
+    karpenko::BSTree< int, std::string > t;
     t.push(2, "two");
     t.push(1, "one");
     t.push(4, "four");
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(rotations)
   }
 
   {
-    karpenko::BSTree<int, std::string> t;
+    karpenko::BSTree< int, std::string > t;
     t.push(3, "three");
     t.push(1, "one");
     t.push(4, "four");
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(rotations)
   }
 
   {
-    karpenko::BSTree<int, std::string> t;
+    karpenko::BSTree< int, std::string > t;
     t.push(1, "one");
     t.push(4, "four");
     t.push(2, "two");
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(rotations)
   }
 
   {
-    karpenko::BSTree<int, std::string> t;
+    karpenko::BSTree< int, std::string > t;
     t.push(4, "four");
     t.push(1, "one");
     t.push(3, "three");
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(rotations)
   }
 
   {
-    karpenko::BSTree<int, std::string> t;
+    karpenko::BSTree< int, std::string > t;
     t.push(1, "one");
     t.push(2, "two");
     BOOST_CHECK_THROW(t.rotateLeft(t.begin()), std::logic_error);

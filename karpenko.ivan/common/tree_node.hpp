@@ -3,29 +3,24 @@
 
 #include <utility>
 
-namespace karpenko {
+namespace karpenko
+{
 
-template <typename Key, typename Value>
+template < typename Key, typename Value >
 struct TreeNode
 {
-  std::pair<const Key, Value> data_;
-  TreeNode* left_;
-  TreeNode* right_;
-  TreeNode* parent_;
+  std::pair< const Key, Value > data;
+  TreeNode* left;
+  TreeNode* right;
+  TreeNode* parent;
 
   TreeNode(const Key& k, Value v)
-    : data_(k, std::move(v)),
-      left_(nullptr),
-      right_(nullptr),
-      parent_(nullptr)
+    : data(k, std::move(v)), left(nullptr), right(nullptr), parent(nullptr)
   {
   }
 
   TreeNode()
-    : data_(Key(), Value()),
-      left_(nullptr),
-      right_(nullptr),
-      parent_(nullptr)
+    : data(Key(), Value()), left(nullptr), right(nullptr), parent(nullptr)
   {
   }
 };

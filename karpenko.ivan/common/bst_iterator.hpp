@@ -4,48 +4,45 @@
 #include "tree_node.hpp"
 #include <ostream>
 
-namespace karpenko {
+namespace karpenko
+{
 
-template <typename Key, typename Value>
+template < typename Key, typename Value >
 class BSTIterator
 {
 public:
-  using Node = TreeNode<Key, Value>;
+  using Node = TreeNode< Key, Value >;
+  Node* node;
 
   explicit BSTIterator(Node* n)
-    : node_(n)
+    : node(n)
   {
   }
 
-  std::pair<const Key, Value>& operator*() const
+  std::pair< const Key, Value >& operator*() const
   {
-    return node_->data_;
+    return node->data;
   }
 
-  std::pair<const Key, Value>* operator->() const
+  std::pair< const Key, Value >* operator->() const
   {
-    return &node_->data_;
+    return &node->data;
   }
 
   BSTIterator& operator++()
   {
-    if (node_->right_)
-    {
-      node_ = node_->right_;
-      while (node_->left_)
-      {
-        node_ = node_->left_;
+    if (node->right) {
+      node = node->right;
+      while (node->left) {
+        node = node->left;
       }
-    }
-    else
-    {
-      Node* parent = node_->parent_;
-      while (parent && node_ == parent->right_)
-      {
-        node_ = parent;
-        parent = parent->parent_;
+    } else {
+      Node* parent = node->parent;
+      while (parent && node == parent->right) {
+        node = parent;
+        parent = parent->parent;
       }
-      node_ = parent;
+      node = parent;
     }
     return *this;
   }
@@ -59,58 +56,51 @@ public:
 
   bool operator==(const BSTIterator& other) const
   {
-    return node_ == other.node_;
+    return node == other.node;
   }
 
   bool operator!=(const BSTIterator& other) const
   {
-    return node_ != other.node_;
+    return node != other.node;
   }
-
-private:
-  Node* node_;
 };
 
-template <typename Key, typename Value>
+template < typename Key, typename Value >
 class BSTConstIterator
 {
 public:
-  using Node = TreeNode<Key, Value>;
+  using Node = TreeNode< Key, Value >;
+  const Node* node;
 
   explicit BSTConstIterator(const Node* n)
-    : node_(n)
+    : node(n)
   {
   }
 
-  const std::pair<const Key, Value>& operator*() const
+  const std::pair< const Key, Value >& operator*() const
   {
-    return node_->data_;
+    return node->data;
   }
 
-  const std::pair<const Key, Value>* operator->() const
+  const std::pair< const Key, Value >* operator->() const
   {
-    return &node_->data_;
+    return &node->data;
   }
 
   BSTConstIterator& operator++()
   {
-    if (node_->right_)
-    {
-      node_ = node_->right_;
-      while (node_->left_)
-      {
-        node_ = node_->left_;
+    if (node->right) {
+      node = node->right;
+      while (node->left) {
+        node = node->left;
       }
-    }
-    else
-    {
-      const Node* parent = node_->parent_;
-      while (parent && node_ == parent->right_)
-      {
-        node_ = parent;
-        parent = parent->parent_;
+    } else {
+      const Node* parent = node->parent;
+      while (parent && node == parent->right) {
+        node = parent;
+        parent = parent->parent;
       }
-      node_ = parent;
+      node = parent;
     }
     return *this;
   }
@@ -124,41 +114,32 @@ public:
 
   bool operator==(const BSTConstIterator& other) const
   {
-    return node_ == other.node_;
+    return node == other.node;
   }
 
   bool operator!=(const BSTConstIterator& other) const
   {
-    return node_ != other.node_;
+    return node != other.node;
   }
-
-private:
-  const Node* node_;
 };
 
-template <typename Key, typename Value>
-std::ostream& operator<<(std::ostream& os, const BSTIterator<Key, Value>& it)
+template < typename Key, typename Value >
+std::ostream& operator<<(std::ostream& os, const BSTIterator< Key, Value >& it)
 {
-  if (it.node_)
-  {
-    os << "iterator( key=" << it.node_->data_.first << " )";
-  }
-  else
-  {
+  if (it.node) {
+    os << "iterator( key=" << it.node->data.first << " )";
+  } else {
     os << "end-iterator";
   }
   return os;
 }
 
-template <typename Key, typename Value>
-std::ostream& operator<<(std::ostream& os, const BSTConstIterator<Key, Value>& it)
+template < typename Key, typename Value >
+std::ostream& operator<<(std::ostream& os, const BSTConstIterator< Key, Value >& it)
 {
-  if (it.node_)
-  {
-    os << "const_iterator( key=" << it.node_->data_.first << " )";
-  }
-  else
-  {
+  if (it.node) {
+    os << "const_iterator( key=" << it.node->data.first << " )";
+  } else {
     os << "end-const_iterator";
   }
   return os;
