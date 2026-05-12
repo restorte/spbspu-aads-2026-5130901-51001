@@ -23,7 +23,6 @@ namespace karpenko {
         return d;
     }
 
-    // обработчик одной команды (тот же код, что в main)
     std::string dispatch(const std::string& line, DictStorage& storage) {
         std::string* tokens = nullptr;
         size_t count = 0;
@@ -124,35 +123,28 @@ BOOST_AUTO_TEST_CASE(set_operations) {
     storage.push("first", karpenko::makeFirst());
     storage.push("second", karpenko::makeSecond());
 
-    // complement
     BOOST_TEST(karpenko::dispatch("complement third second first", storage) == "");
     BOOST_TEST(karpenko::dispatch("print third", storage) == "third 4 mouse\n");
     BOOST_TEST(karpenko::dispatch("complement third second first", storage) == "<INVALID COMMAND>\n");
     BOOST_TEST(karpenko::dispatch("complement broken second", storage) == "<INVALID COMMAND>\n");
     BOOST_TEST(karpenko::dispatch("complement broken missing first", storage) == "<INVALID COMMAND>\n");
 
-    // Попытка перезаписать существующий словарь "empty" → ошибка
     storage.push("empty", karpenko::Dictionary{});
     BOOST_TEST(karpenko::dispatch("complement empty first second", storage) == "<INVALID COMMAND>\n");
-    // Словарь "empty" остаётся пустым
     BOOST_TEST(karpenko::dispatch("print empty", storage) == "<EMPTY>\n");
 
-    // intersect
     BOOST_TEST(karpenko::dispatch("intersect fourth first second", storage) == "");
     BOOST_TEST(karpenko::dispatch("print fourth", storage) == "fourth 1 name 2 surname\n");
     BOOST_TEST(karpenko::dispatch("intersect bad first", storage) == "<INVALID COMMAND>\n");
 
-    // union
     BOOST_TEST(karpenko::dispatch("union fifth first second", storage) == "");
     BOOST_TEST(karpenko::dispatch("print fifth", storage) == "fifth 1 name 2 surname 4 mouse\n");
     BOOST_TEST(karpenko::dispatch("union bad first second extra", storage) == "<INVALID COMMAND>\n");
 
-    // повторная печать
     BOOST_TEST(karpenko::dispatch("print fifth", storage) == "fifth 1 name 2 surname 4 mouse\n");
 }
 
 BOOST_AUTO_TEST_CASE(set_operation_overwrite_aliases) {
-    // complement перезапись (запрещена)
     {
         karpenko::DictStorage storage;
         storage.push("first", karpenko::makeFirst());
@@ -160,7 +152,6 @@ BOOST_AUTO_TEST_CASE(set_operation_overwrite_aliases) {
         BOOST_TEST(karpenko::dispatch("complement second second first", storage) == "<INVALID COMMAND>\n");
         BOOST_TEST(karpenko::dispatch("print second", storage) == "second 1 name 2 keyboard 4 mouse\n");
     }
-    // intersect перезапись
     {
         karpenko::DictStorage storage;
         storage.push("first", karpenko::makeFirst());
@@ -168,7 +159,6 @@ BOOST_AUTO_TEST_CASE(set_operation_overwrite_aliases) {
         BOOST_TEST(karpenko::dispatch("intersect second second first", storage) == "<INVALID COMMAND>\n");
         BOOST_TEST(karpenko::dispatch("print second", storage) == "second 1 name 2 keyboard 4 mouse\n");
     }
-    // union перезапись
     {
         karpenko::DictStorage storage;
         storage.push("first", karpenko::makeFirst());
@@ -180,7 +170,6 @@ BOOST_AUTO_TEST_CASE(set_operation_overwrite_aliases) {
         storage.push("second", std::move(secondPlus));
         BOOST_TEST(karpenko::dispatch("union first second first", storage) == "<INVALID COMMAND>\n");
     }
-    // ИСПРАВЛЕНО: intersect с уже существующим first → ошибка, first не меняется
     {
         karpenko::DictStorage storage;
         storage.push("first", karpenko::makeFirst());
@@ -220,4 +209,3 @@ BOOST_AUTO_TEST_CASE(acceptance_scenario) {
         "fifth 1 name 2 surname 4 mouse\n";
     BOOST_TEST(output == expected);
 }
-
