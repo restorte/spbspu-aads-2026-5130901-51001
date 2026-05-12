@@ -1,249 +1,393 @@
 #ifndef KARPENKO_BSTREE_IMPL_HPP
 #define KARPENKO_BSTREE_IMPL_HPP
 
+#include "bstree.hpp"
 #include <stdexcept>
 #include <utility>
 
 namespace karpenko {
 
-template <typename Key, typename Value, typename Compare>
-BSTree<Key, Value, Compare>::BSTree()
-    : fake_root(new Node()), cmp(Compare())
+void split(const std::string& s, std::string*& out, size_t& count)
 {
-    fake_root->parent = nullptr;
-    fake_root->left = nullptr;
-    fake_root->right = nullptr;
+  count = 0;
+  size_t pos = 0;
+  const size_t n = s.size();
+
+  while (pos < n)
+  {
+    while (pos < n && s[pos] == ' ')
+    {
+      ++pos;
+    }
+    if (pos < n)
+    {
+      ++count;
+      while (pos < n && s[pos] != ' ')
+      {
+        ++pos;
+      }
+    }
+  }
+
+  out = new std::string[count];
+  pos = 0;
+  size_t idx = 0;
+  while (pos < n)
+  {
+    while (pos < n && s[pos] == ' ')
+    {
+      ++pos;
+    }
+    size_t start = pos;
+    while (pos < n && s[pos] != ' ')
+    {
+      ++pos;
+    }
+    if (start < pos)
+    {
+      out[idx++] = s.substr(start, pos - start);
+    }
+  }
 }
 
 template <typename Key, typename Value, typename Compare>
-BSTree<Key, Value, Compare>::~BSTree() {
-    clear_tree(fake_root->left);
-    delete fake_root;
+BSTree<Key, Value, Compare>::BSTree()
+  : fake_root_(new Node()),
+    cmp_(Compare())
+{
+  fake_root_->parent_ = nullptr;
+  fake_root_->left_ = nullptr;
+  fake_root_->right_ = nullptr;
+}
+
+template <typename Key, typename Value, typename Compare>
+BSTree<Key, Value, Compare>::~BSTree()
+{
+  clear_tree(fake_root_->left_);
+  delete fake_root_;
 }
 
 template <typename Key, typename Value, typename Compare>
 BSTree<Key, Value, Compare>::BSTree(BSTree&& other) noexcept
-    : fake_root(other.fake_root), cmp(std::move(other.cmp))
+  : fake_root_(other.fake_root_),
+    cmp_(std::move(other.cmp_))
 {
-    other.fake_root = new Node();
+  other.fake_root_ = new Node();
 }
 
 template <typename Key, typename Value, typename Compare>
-BSTree<Key, Value, Compare>& BSTree<Key, Value, Compare>::operator=(BSTree&& other) noexcept {
-    if (this != &other) {
-        clear_tree(fake_root->left);
-        delete fake_root;
-        fake_root = other.fake_root;
-        cmp = std::move(other.cmp);
-        other.fake_root = new Node();
+BSTree<Key, Value, Compare>& BSTree<Key, Value, Compare>::operator=(BSTree&& other) noexcept
+{
+  if (this != &other)
+  {
+    clear_tree(fake_root_->left_);
+    delete fake_root_;
+    fake_root_ = other.fake_root_;
+    cmp_ = std::move(other.cmp_);
+    other.fake_root_ = new Node();
+  }
+  return *this;
+}
+
+template <typename Key, typename Value, typename Compare>
+void BSTree<Key, Value, Compare>::push(const Key& k, Value v)
+{
+  if (fake_root_->left_ == nullptr)
+  {
+    fake_root_->left_ = new Node(k, std::move(v));
+    fake_root_->left_->parent_ = fake_root_;
+    return;
+  }
+
+  Node* current = fake_root_->left_;
+  Node* parent = fake_root_;
+
+  while (current)
+  {
+    parent = current;
+    if (cmp_(k, current->data_.first))
+    {
+      current = current->left_;
     }
-    return *this;
-}
-
-template <typename Key, typename Value, typename Compare>
-void BSTree<Key, Value, Compare>::push(const Key& k, Value v) {
-    if (fake_root->left == nullptr) {
-        fake_root->left = new Node(k, std::move(v));
-        fake_root->left->parent = fake_root;
-        return;
+    else if (cmp_(current->data_.first, k))
+    {
+      current = current->right_;
     }
-
-    Node* current = fake_root->left;
-    Node* parent = fake_root;
-
-    while (current) {
-        parent = current;
-        if (cmp(k, current->data.first)) {
-            current = current->left;
-        } else if (cmp(current->data.first, k)) {
-            current = current->right;
-        } else {
-            current->data.second = std::move(v);
-            return;
-        }
+    else
+    {
+      current->data_.second = std::move(v);
+      return;
     }
+  }
 
-    Node* newNode = new Node(k, std::move(v));
-    if (cmp(k, parent->data.first))
-        parent->left = newNode;
-    else
-        parent->right = newNode;
-    newNode->parent = parent;
+  Node* new_node = new Node(k, std::move(v));
+  if (cmp_(k, parent->data_.first))
+  {
+    parent->left_ = new_node;
+  }
+  else
+  {
+    parent->right_ = new_node;
+  }
+  new_node->parent_ = parent;
 }
 
 template <typename Key, typename Value, typename Compare>
-Value BSTree<Key, Value, Compare>::get(const Key& k) const {
-    Node* n = find_node(k);
-    if (!n) throw std::out_of_range("key not found");
-    return n->data.second;
+Value BSTree<Key, Value, Compare>::get(const Key& k) const
+{
+  Node* n = find_node(k);
+  if (!n)
+  {
+    throw std::out_of_range("key not found");
+  }
+  return n->data_.second;
 }
 
 template <typename Key, typename Value, typename Compare>
-Value BSTree<Key, Value, Compare>::drop(const Key& k) {
-    Node* n = find_node(k);
-    if (!n) throw std::out_of_range("key not found");
-    Value ret = n->data.second;
-    remove_node(n);
-    return ret;
-}
-
-template <typename Key, typename Value, typename Compare>
-typename BSTree<Key, Value, Compare>::const_iterator
-BSTree<Key, Value, Compare>::find(const Key& k) const {
-    Node* n = find_node(k);
-    return const_iterator(n ? n : fake_root);
-}
-
-template <typename Key, typename Value, typename Compare>
-typename BSTree<Key, Value, Compare>::const_iterator
-BSTree<Key, Value, Compare>::begin() const {
-    Node* cur = fake_root->left;
-    if (!cur) return end();
-    while (cur->left) cur = cur->left;
-    return const_iterator(cur);
-}
-
-template <typename Key, typename Value, typename Compare>
-typename BSTree<Key, Value, Compare>::const_iterator
-BSTree<Key, Value, Compare>::end() const {
-    return const_iterator(fake_root);
+Value BSTree<Key, Value, Compare>::drop(const Key& k)
+{
+  Node* n = find_node(k);
+  if (!n)
+  {
+    throw std::out_of_range("key not found");
+  }
+  Value ret = n->data_.second;
+  remove_node(n);
+  return ret;
 }
 
 template <typename Key, typename Value, typename Compare>
 typename BSTree<Key, Value, Compare>::const_iterator
-BSTree<Key, Value, Compare>::rotateLeft(const_iterator it) {
-    Node* x = const_cast<Node*>(it.node);
-    if (!x || x == fake_root || !x->parent || x->parent == fake_root)
-        throw std::logic_error("impossible left rotation");
-    Node* p = x->parent;
-    if (x != p->right)
-        throw std::logic_error("node is not a right child for left rotation");
-
-    p->right = x->left;
-    if (x->left) x->left->parent = p;
-    x->left = p;
-    x->parent = p->parent;
-    if (p->parent->left == p)
-        p->parent->left = x;
-    else
-        p->parent->right = x;
-    p->parent = x;
-    return const_iterator(x);
+BSTree<Key, Value, Compare>::find(const Key& k) const
+{
+  Node* n = find_node(k);
+  return const_iterator(n ? n : fake_root_);
 }
 
 template <typename Key, typename Value, typename Compare>
 typename BSTree<Key, Value, Compare>::const_iterator
-BSTree<Key, Value, Compare>::rotateRight(const_iterator it) {
-    Node* x = const_cast<Node*>(it.node);
-    if (!x || x == fake_root || !x->parent || x->parent == fake_root)
-        throw std::logic_error("impossible right rotation");
-    Node* p = x->parent;
-    if (x != p->left)
-        throw std::logic_error("node is not a left child for right rotation");
-
-    p->left = x->right;
-    if (x->right) x->right->parent = p;
-    x->right = p;
-    x->parent = p->parent;
-    if (p->parent->left == p)
-        p->parent->left = x;
-    else
-        p->parent->right = x;
-    p->parent = x;
-    return const_iterator(x);
+BSTree<Key, Value, Compare>::begin() const
+{
+  Node* cur = fake_root_->left_;
+  if (!cur)
+  {
+    return end();
+  }
+  while (cur->left_)
+  {
+    cur = cur->left_;
+  }
+  return const_iterator(cur);
 }
 
 template <typename Key, typename Value, typename Compare>
 typename BSTree<Key, Value, Compare>::const_iterator
-BSTree<Key, Value, Compare>::rotateLargeLeft(const_iterator it) {
-    Node* x = const_cast<Node*>(it.node);
-    if (!x || x == fake_root || !x->parent || x->parent == fake_root)
-        throw std::logic_error("impossible large left rotation");
-    Node* p = x->parent;
-    Node* g = p->parent;
-    if (p != g->right || x != p->left)
-        throw std::logic_error("wrong structure for large left rotation");
-
-    rotateRight(const_iterator(x));
-    return rotateLeft(const_iterator(x));
+BSTree<Key, Value, Compare>::end() const
+{
+  return const_iterator(fake_root_);
 }
 
 template <typename Key, typename Value, typename Compare>
 typename BSTree<Key, Value, Compare>::const_iterator
-BSTree<Key, Value, Compare>::rotateLargeRight(const_iterator it) {
-    Node* x = const_cast<Node*>(it.node);
-    if (!x || x == fake_root || !x->parent || x->parent == fake_root)
-        throw std::logic_error("impossible large right rotation");
-    Node* p = x->parent;
-    Node* g = p->parent;
-    if (p != g->left || x != p->right)
-        throw std::logic_error("wrong structure for large right rotation");
+BSTree<Key, Value, Compare>::rotateLeft(const_iterator it)
+{
+  Node* x = const_cast<Node*>(it.node_);
+  if (!x || x == fake_root_ || !x->parent_ || x->parent_ == fake_root_)
+  {
+    throw std::logic_error("impossible left rotation");
+  }
+  Node* p = x->parent_;
+  if (x != p->right_)
+  {
+    throw std::logic_error("node is not a right child for left rotation");
+  }
 
-    rotateLeft(const_iterator(x));
-    return rotateRight(const_iterator(x));
+  p->right_ = x->left_;
+  if (x->left_)
+  {
+    x->left_->parent_ = p;
+  }
+  x->left_ = p;
+  x->parent_ = p->parent_;
+  if (p->parent_->left_ == p)
+  {
+    p->parent_->left_ = x;
+  }
+  else
+  {
+    p->parent_->right_ = x;
+  }
+  p->parent_ = x;
+  return const_iterator(x);
 }
 
 template <typename Key, typename Value, typename Compare>
-size_t BSTree<Key, Value, Compare>::height() const {
-    return node_height(fake_root->left);
+typename BSTree<Key, Value, Compare>::const_iterator
+BSTree<Key, Value, Compare>::rotateRight(const_iterator it)
+{
+  Node* x = const_cast<Node*>(it.node_);
+  if (!x || x == fake_root_ || !x->parent_ || x->parent_ == fake_root_)
+  {
+    throw std::logic_error("impossible right rotation");
+  }
+  Node* p = x->parent_;
+  if (x != p->left_)
+  {
+    throw std::logic_error("node is not a left child for right rotation");
+  }
+
+  p->left_ = x->right_;
+  if (x->right_)
+  {
+    x->right_->parent_ = p;
+  }
+  x->right_ = p;
+  x->parent_ = p->parent_;
+  if (p->parent_->left_ == p)
+  {
+    p->parent_->left_ = x;
+  }
+  else
+  {
+    p->parent_->right_ = x;
+  }
+  p->parent_ = x;
+  return const_iterator(x);
 }
 
 template <typename Key, typename Value, typename Compare>
-size_t BSTree<Key, Value, Compare>::height(const_iterator it) const {
-    return node_height(it.node);
+typename BSTree<Key, Value, Compare>::const_iterator
+BSTree<Key, Value, Compare>::rotateLargeLeft(const_iterator it)
+{
+  Node* x = const_cast<Node*>(it.node_);
+  if (!x || x == fake_root_ || !x->parent_ || x->parent_ == fake_root_)
+  {
+    throw std::logic_error("impossible large left rotation");
+  }
+  Node* p = x->parent_;
+  Node* g = p->parent_;
+  if (p != g->right_ || x != p->left_)
+  {
+    throw std::logic_error("wrong structure for large left rotation");
+  }
+
+  rotateRight(const_iterator(x));
+  return rotateLeft(const_iterator(x));
+}
+
+template <typename Key, typename Value, typename Compare>
+typename BSTree<Key, Value, Compare>::const_iterator
+BSTree<Key, Value, Compare>::rotateLargeRight(const_iterator it)
+{
+  Node* x = const_cast<Node*>(it.node_);
+  if (!x || x == fake_root_ || !x->parent_ || x->parent_ == fake_root_)
+  {
+    throw std::logic_error("impossible large right rotation");
+  }
+  Node* p = x->parent_;
+  Node* g = p->parent_;
+  if (p != g->left_ || x != p->right_)
+  {
+    throw std::logic_error("wrong structure for large right rotation");
+  }
+
+  rotateLeft(const_iterator(x));
+  return rotateRight(const_iterator(x));
+}
+
+template <typename Key, typename Value, typename Compare>
+size_t BSTree<Key, Value, Compare>::height() const
+{
+  return node_height(fake_root_->left_);
+}
+
+template <typename Key, typename Value, typename Compare>
+size_t BSTree<Key, Value, Compare>::height(const_iterator it) const
+{
+  return node_height(it.node_);
 }
 
 template <typename Key, typename Value, typename Compare>
 typename BSTree<Key, Value, Compare>::Node*
-BSTree<Key, Value, Compare>::find_node(const Key& k) const {
-    Node* cur = fake_root->left;
-    while (cur) {
-        if (cmp(k, cur->data.first))
-            cur = cur->left;
-        else if (cmp(cur->data.first, k))
-            cur = cur->right;
-        else
-            return cur;
+BSTree<Key, Value, Compare>::find_node(const Key& k) const
+{
+  Node* cur = fake_root_->left_;
+  while (cur)
+  {
+    if (cmp_(k, cur->data_.first))
+    {
+      cur = cur->left_;
     }
-    return nullptr;
-}
-
-template <typename Key, typename Value, typename Compare>
-void BSTree<Key, Value, Compare>::remove_node(Node* n) {
-    if (!n || n == fake_root)
-        throw std::logic_error("invalid node for removal");
-
-    if (n->left && n->right) {
-        Node* succ = n->right;
-        while (succ->left) succ = succ->left;
-        const_cast<Key&>(n->data.first) = succ->data.first;
-        n->data.second = std::move(succ->data.second);
-        n = succ;
+    else if (cmp_(cur->data_.first, k))
+    {
+      cur = cur->right_;
     }
-
-    Node* child = n->left ? n->left : n->right;
-    if (child) child->parent = n->parent;
-    if (n->parent->left == n)
-        n->parent->left = child;
     else
-        n->parent->right = child;
-    delete n;
+    {
+      return cur;
+    }
+  }
+  return nullptr;
 }
 
 template <typename Key, typename Value, typename Compare>
-void BSTree<Key, Value, Compare>::clear_tree(Node* node) {
-    if (!node) return;
-    clear_tree(node->left);
-    clear_tree(node->right);
-    delete node;
+void BSTree<Key, Value, Compare>::remove_node(Node* n)
+{
+  if (!n || n == fake_root_)
+  {
+    throw std::logic_error("invalid node for removal");
+  }
+
+  if (n->left_ && n->right_)
+  {
+    Node* succ = n->right_;
+    while (succ->left_)
+    {
+      succ = succ->left_;
+    }
+    const_cast<Key&>(n->data_.first) = succ->data_.first;
+    n->data_.second = std::move(succ->data_.second);
+    n = succ;
+  }
+
+  Node* child = n->left_ ? n->left_ : n->right_;
+  if (child)
+  {
+    child->parent_ = n->parent_;
+  }
+  if (n->parent_->left_ == n)
+  {
+    n->parent_->left_ = child;
+  }
+  else
+  {
+    n->parent_->right_ = child;
+  }
+  delete n;
 }
 
 template <typename Key, typename Value, typename Compare>
-size_t BSTree<Key, Value, Compare>::node_height(const Node* node) const {
-    if (!node || node == fake_root) return 0;
-    size_t lh = node_height(node->left);
-    size_t rh = node_height(node->right);
-    return 1 + (lh > rh ? lh : rh);
+void BSTree<Key, Value, Compare>::clear_tree(Node* node)
+{
+  if (!node)
+  {
+    return;
+  }
+  clear_tree(node->left_);
+  clear_tree(node->right_);
+  delete node;
+}
+
+template <typename Key, typename Value, typename Compare>
+size_t BSTree<Key, Value, Compare>::node_height(const Node* node) const
+{
+  if (!node || node == fake_root_)
+  {
+    return 0;
+  }
+  size_t lh = node_height(node->left_);
+  size_t rh = node_height(node->right_);
+  return 1 + (lh > rh ? lh : rh);
 }
 
 }
