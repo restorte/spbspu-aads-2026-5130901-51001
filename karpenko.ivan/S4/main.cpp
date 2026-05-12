@@ -3,7 +3,6 @@
 #include <string>
 #include <stdexcept>
 #include "../common/bstree.hpp"
-
 namespace karpenko {
     using DictValue = BSTree<int, std::string>;
     using DictStorage = BSTree<std::string, DictValue>;
