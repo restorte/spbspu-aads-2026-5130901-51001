@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(rotations) {
         t.push(2, "two");
         t.push(3, "three");
 
-        auto inner = t.begin(); ++inner;
+        auto inner = t.begin(); ++inner;   // узел 2
         auto raised = t.rotateLargeLeft(inner);
         BOOST_TEST(raised->first == 2);
         BOOST_TEST(karpenko::keys(t) == "1234");
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(rotations) {
         t.push(3, "three");
         t.push(2, "two");
 
-        auto inner = t.begin(); ++inner; ++inner;
+        auto inner = t.begin(); ++inner; ++inner;   // узел 3
         auto raised = t.rotateLargeRight(inner);
         BOOST_TEST(raised->first == 3);
         BOOST_TEST(karpenko::keys(t) == "1234");
