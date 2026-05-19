@@ -128,6 +128,52 @@ private:
         return n;
     }
 
+    Node* erase(Node* n, const Key& k)
+    {
+        if (!n) return nullptr;
+        if (cmp_(k, n->data.first))
+            n->left = erase(n->left, k);
+        else if (cmp_(n->data.first, k))
+            n->right = erase(n->right, k);
+        else
+        {
+            if (!n->left || !n->right)
+            {
+                Node* child = n->left ? n->left : n->right;
+                if (child) child->parent = n->parent;
+                delete n;
+                return child;
+            }
+            else
+            {
+                Node* succ = minimum(n->right);
+                const_cast<Key&>(n->data.first) = succ->data.first;
+                n->data.second = std::move(succ->data.second);
+                n->right = erase(n->right, succ->data.first);
+            }
+        }
+        return balance(n);
+    }
+
+    void clear(Node* n)
+    {
+        if (!n) return;
+        clear(n->left);
+        clear(n->right);
+        delete n;
+    }
+
+    Node* copyNode(Node* n, Node* parent)
+    {
+        if (!n) return nullptr;
+        Node* newNode = new Node(n->data.first, n->data.second);
+        newNode->parent = parent;
+        newNode->left = copyNode(n->left, newNode);
+        newNode->right = copyNode(n->right, newNode);
+        newNode->height = n->height;
+        return newNode;
+    }
+
 public:
     AVLTree() : root_(nullptr), cmp_() {}
     ~AVLTree() { clear(root_); }
