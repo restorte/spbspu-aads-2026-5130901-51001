@@ -211,6 +211,44 @@ public:
         return *this;
     }
 
+    class const_iterator
+    {
+        const Node* ptr;
+        const Node* root;
+        void advance()
+        {
+            if (ptr->right)
+            {
+                ptr = ptr->right;
+                while (ptr->left) ptr = ptr->left;
+                return;
+            }
+            const Node* p = ptr->parent;
+            while (p && ptr == p->right)
+            {
+                ptr = p;
+                p = p->parent;
+            }
+            ptr = p;
+        }
+    public:
+        const_iterator(const Node* p = nullptr, const Node* r = nullptr) : ptr(p), root(r) {}
+        const std::pair<const Key, Value>& operator*() const { return ptr->data; }
+        const std::pair<const Key, Value>* operator->() const { return &ptr->data; }
+        const_iterator& operator++() { advance(); return *this; }
+        const_iterator operator++(int) { const_iterator tmp = *this; advance(); return tmp; }
+        bool operator==(const const_iterator& other) const { return ptr == other.ptr; }
+        bool operator!=(const const_iterator& other) const { return !(*this == other); }
+    };
+
+    const_iterator begin() const
+    {
+        Node* cur = root_;
+        while (cur && cur->left) cur = cur->left;
+        return const_iterator(cur, root_);
+    }
+    const_iterator end() const { return const_iterator(nullptr, root_); }
+
     void insert(const Key& k, const Value& v) { root_ = insert(root_, k, v, nullptr); }
     Value& at(const Key& k)
     {
