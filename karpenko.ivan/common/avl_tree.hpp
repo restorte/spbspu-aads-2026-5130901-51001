@@ -178,6 +178,39 @@ public:
     AVLTree() : root_(nullptr), cmp_() {}
     ~AVLTree() { clear(root_); }
 
+    AVLTree(const AVLTree& other) : root_(nullptr), cmp_(other.cmp_)
+    {
+        root_ = copyNode(other.root_, nullptr);
+    }
+
+    AVLTree& operator=(const AVLTree& other)
+    {
+        if (this != &other)
+        {
+            clear(root_);
+            cmp_ = other.cmp_;
+            root_ = copyNode(other.root_, nullptr);
+        }
+        return *this;
+    }
+
+    AVLTree(AVLTree&& other) noexcept : root_(other.root_), cmp_(std::move(other.cmp_))
+    {
+        other.root_ = nullptr;
+    }
+
+    AVLTree& operator=(AVLTree&& other) noexcept
+    {
+        if (this != &other)
+        {
+            clear(root_);
+            root_ = other.root_;
+            cmp_ = std::move(other.cmp_);
+            other.root_ = nullptr;
+        }
+        return *this;
+    }
+
     void insert(const Key& k, const Value& v) { root_ = insert(root_, k, v, nullptr); }
     Value& at(const Key& k)
     {
