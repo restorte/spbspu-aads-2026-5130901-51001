@@ -43,6 +43,91 @@ private:
     void updateHeight(Node* n) { if (n) n->height = 1 + std::max(height(n->left), height(n->right)); }
     int balanceFactor(Node* n) { return height(n->right) - height(n->left); }
 
+    Node* rotateRight(Node* y)
+    {
+        Node* x = y->left;
+        Node* T2 = x->right;
+
+        x->right = y;
+        y->left = T2;
+
+        if (T2) T2->parent = y;
+        x->parent = y->parent;
+        y->parent = x;
+
+        updateHeight(y);
+        updateHeight(x);
+        return x;
+    }
+
+    Node* rotateLeft(Node* x)
+    {
+        Node* y = x->right;
+        Node* T2 = y->left;
+
+        y->left = x;
+        x->right = T2;
+
+        if (T2) T2->parent = x;
+        y->parent = x->parent;
+        x->parent = y;
+
+        updateHeight(x);
+        updateHeight(y);
+        return y;
+    }
+
+    Node* balance(Node* n)
+    {
+        if (!n) return nullptr;
+        updateHeight(n);
+        int bf = balanceFactor(n);
+        if (bf == 2)
+        {
+            if (balanceFactor(n->right) < 0)
+                n->right = rotateRight(n->right);
+            return rotateLeft(n);
+        }
+        if (bf == -2)
+        {
+            if (balanceFactor(n->left) > 0)
+                n->left = rotateLeft(n->left);
+            return rotateRight(n);
+        }
+        return n;
+    }
+
+    Node* insert(Node* n, const Key& k, const Value& v, Node* parent)
+    {
+        if (!n)
+        {
+            Node* node = new Node(k, v);
+            node->parent = parent;
+            return node;
+        }
+        if (cmp_(k, n->data.first))
+            n->left = insert(n->left, k, v, n);
+        else if (cmp_(n->data.first, k))
+            n->right = insert(n->right, k, v, n);
+        else
+            n->data.second = v;
+        return balance(n);
+    }
+
+    Node* findNode(Node* n, const Key& k) const
+    {
+        if (!n) return nullptr;
+        if (cmp_(k, n->data.first)) return findNode(n->left, k);
+        if (cmp_(n->data.first, k)) return findNode(n->right, k);
+        return n;
+    }
+
+    Node* minimum(Node* n) const
+    {
+        while (n && n->left) n = n->left;
+        return n;
+    }
+
 public:
     AVLTree() : root_(nullptr), cmp_() {}
     ~AVLTree() { clear(root_); }
